@@ -48,10 +48,36 @@ class Journalist(object):
 
     def _inspect_articles(self):
         """
-        Summarize all the new articles
+        Summarize all the new articles with visual progress
         :return:
         """
+        print("DEBUG: Searching articles without summary in the DB...")
+        # Get articles without summary
         articles = self.article_repository.get_without_summary()
-        for article in articles:
-            article.summary = self.summarizer.summarize_article(article)
-        self.article_repository.commit()
+        
+        total = len(articles)
+        print(f"DEBUG: Found {total} articles to summarize with AI.")
+
+        if total == 0:
+            return
+
+        for index, article in enumerate(articles):
+            # Print progress: [1/20] Summarizing: Title...
+            print(f" >> [{index + 1}/{total}] Summarizing: {article.title[:50]}...")
+            
+            try:
+                # If the content is empty, don't summarize with AI
+                if not article.content or len(article.content) < 50:
+                    print(f"    WARNING: The article '{article.title}' has no content. Skipping.")
+                else:
+                    article.summary = self.summarizer.summarize_article(article)
+                
+                # We save each article individually, so if the program fails we don't lose all progress
+                self.article_repository.commit() 
+                
+            except Exception as e:
+                print(f"    ERROR summarizing article {article.id}: {e}")
+                # If the API fails we stop ? 
+                # break 
+
+        print("DEBUG: Summary process finished.")

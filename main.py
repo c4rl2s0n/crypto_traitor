@@ -3,6 +3,7 @@ from config.di_container import container
 from research.coins.sources.coinmarketcap import CoinMarketCap
 from research.journalist import *
 from research.news.sources.coindesk import CoinDesk
+from research.news.sources.cryptoslate import CryptoSlate
 from tools.ai.agents.llm_gemini import LLMGemini
 
 bootstrap()
@@ -14,6 +15,7 @@ coin_repo = container.coin_repository()
 journalist = Journalist(article_repo, coin_repo, NewsSummarAIzer(LLMGemini(), container.prompts()))
 
 # journalist.lookup_coins([CoinMarketCap()])
-journalist.research_news([CoinDesk()])
+# journalist.research_news([CoinDesk()])
+journalist.research_news([CryptoSlate()])
 
 db.close()
