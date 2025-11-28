@@ -31,7 +31,7 @@ One day, this shall become an AI powered bot for trading crypto currencies.
     - should be used to get market data, prices, ...
   - _news/_
     - get news articles from various sources
-    - __NOTE__: It seems even the [CoinDesk](traitor/research/news/sources/coindesk.py) is no longer working, seems they expect JS now...
+    - __NOTE__: It seems even the [CoinDesk](traitor/core/research/news/sources/coindesk.py) is no longer working, seems they expect JS now...
       - To cover more sources, it might be an option to use an automated [Selenium](https://www.selenium.dev/documentation/webdriver/getting_started/first_script/?language=python) browser, as [requests](https://docs.python-requests.org/en/latest/index.html) cannot handle JS
 - _tools/_
   - contains generic tools, like 
@@ -111,4 +111,7 @@ Also try to keep things modular to facilitate maintenance and extension.
 - (optional/extended scope)
   - would be nice to somehow show the information we gather and all the actions the AI is doing in a website
     - maybe use django and create simple overviews
-  - 
+  - Send actual transactions
+    - [MetaMask API](https://docs.metamask.io/services/tutorials/ethereum/send-a-transaction/send-a-transaction-py/)
+      - could be useful to automatically send transactions
+      - should work at least for ethereum (or all ether-based chains?)

@@ -1,29 +1,9 @@
-from traitor.config import container
-from traitor.config.di_container import bootstrap
-from traitor.data.repositories import *
-from traitor.research.journalist import *
-from traitor.research.market.coingecko import CoinGecko
-from traitor.tools.ai.agents.llm_gemini import LLMGemini
-
-
-def initialize_coins() -> list[Coin]:
-    coin_repo = CoinRepository()
-    if not coin_repo.empty():
-        return coin_repo.get_all()
-
-    # get list of available coins
-    coin_gecko = CoinGecko()
-    coins = coin_gecko.get_coins()
-    coin_repo.add_all(coins)
-    return coins
-
-
-def activate_coin(coin: Coin):
-    price_repo = PricesRepository()
-    last_price = price_repo.last_price(coin.id)
-    coin_gecko = CoinGecko()
-    prices = coin_gecko.get_coin_historical_prices_precise(coin, t_from=last_price)
-    price_repo.add_prices(prices)
+from traitor.core.data.models import Coin
+from traitor.core.data.repositories import CoinRepository, PricesRepository
+from traitor.core.config import container
+from traitor.core.research.market.coingecko import CoinGecko
+from traitor.core.research.news.sources.cryptoslate import CryptoSlate
+from traitor.core.services import CoinService, ResearchService
 
 
 def run():
@@ -34,12 +14,16 @@ def run():
     # TODO: Research Loop (News + Summarize)
     # TODO: Research Loop (Market + Analyze + Summarize)
     # TODO: Trading Loop
-    initialize_coins()
+    coin_service = CoinService()
+    coin_service.load_all_coins()
+
     coin_repo = CoinRepository()
     coins = coin_repo.get_by_coingecko_ids(['bitcoin', 'zcash', 'monero'])
     for c in coins:
-        activate_coin(c)
+        coin_service.activate_coin(c)
 
+    research_service = ResearchService()
+    research_service.research_news([CryptoSlate()])
 
     # article_repo = container.article_repository()
     # coin_repo = container.coin_repository()
