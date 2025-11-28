@@ -1,4 +1,0 @@
-
-
-class MarketValue(object):
-    pass
