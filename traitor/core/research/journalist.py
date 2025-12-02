@@ -59,7 +59,7 @@ class Journalist(object):
                 self.article_repository.commit() 
                 
             except Exception as e:
-                print(f"    ERROR summarizing article {article.id}: {e}")
+                print(f"    ERROR summarizing article {article.title}: {e}")
                 # If the API fails we stop ? 
                 # break 
 

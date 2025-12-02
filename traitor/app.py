@@ -1,4 +1,6 @@
 from traitor.core.data.models import Coin
+import traitor.core.data.repositories.article_repository 
+import traitor.core.services.research_service
 from traitor.core.data.repositories import CoinRepository, PricesRepository
 from traitor.core.config import container
 from traitor.core.research.market.coingecko import CoinGecko
@@ -8,7 +10,11 @@ from traitor.core.services import CoinService, ResearchService
 
 def run():
     container.init_resources()
-    container.wire(modules=[__name__])
+    container.wire(modules=[
+        __name__,
+        traitor.core.data.repositories.article_repository, 
+        traitor.core.services.research_service
+    ])
 
     # TODO: Setup
     # TODO: Research Loop (News + Summarize)

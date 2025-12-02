@@ -162,6 +162,14 @@ class CoinGecko(object):
         :param t_to:  Timestamp to when to get the prices. If None -> Today
         :return:
         """
+
+        # -------------------
+        if t_from is not None and t_from.tzinfo is not None:
+            t_from = t_from.replace(tzinfo=None)
+        if t_to is not None and t_to.tzinfo is not None:
+            t_to = t_to.replace(tzinfo=None)
+        # -------------------
+
         self._check_coin(coin)
 
         min_from = datetime.now() - timedelta(days=365)
@@ -193,6 +201,14 @@ class CoinGecko(object):
         :param t_to:  Timestamp to when to get the prices. If None -> Today
         :return:
         """
+
+        # -------------------
+        if t_from is not None and t_from.tzinfo is not None:
+            t_from = t_from.replace(tzinfo=None)
+        if t_to is not None and t_to.tzinfo is not None:
+            t_to = t_to.replace(tzinfo=None)
+        # -------------------
+
         coin_api_id = self._check_coin(coin)
 
         min_from = datetime.now() - timedelta(days=365)
