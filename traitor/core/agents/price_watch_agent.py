@@ -1,6 +1,8 @@
 import logging
 from datetime import timedelta
 
+from dependency_injector.wiring import inject, Provide
+
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.repositories import CoinRepository
 from traitor.core.research.market import CryptoApi
@@ -11,7 +13,9 @@ class PriceWatchAgent(AgentBase):
     name = "Price Watch"
     interval = timedelta(minutes=5)
 
-    def __init__(self, crypto_api: CryptoApi):
+    @inject
+    def __init__(self, crypto_api: CryptoApi, interval = Provide["config.intervals.PRICES"]):
+        self.interval = interval
         self.coin_repo = CoinRepository()
         self.coins = self.coin_repo.get_active()
         self.coin_service = CoinService(crypto_api=crypto_api)

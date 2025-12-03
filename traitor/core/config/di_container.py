@@ -40,6 +40,11 @@ class Container(containers.DynamicContainer):
         import google.generativeai as genai
         genai.configure(api_key=self.config.api_keys.GEMINI())
 
+        self.config.intervals.PRICES.from_value(INTERVALS.prices)
+        self.config.intervals.NEWS.from_value(INTERVALS.news)
+        self.config.intervals.TRADING.from_value(INTERVALS.trading)
+
+
 
 # global container for dependency injection
 container = Container()

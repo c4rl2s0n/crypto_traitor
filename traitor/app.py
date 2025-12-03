@@ -41,10 +41,9 @@ def run():
     container.init_resources()
     container.wire(modules=[
         __name__,
-        # traitor.core.data.repositories.article_repository,
         traitor.core.data.repositories,
         traitor.core.data.repositories.repository,
-        # traitor.core.services.news_research_service
+        traitor.core.agents,
         traitor.core.services,
         traitor.core.research,
         traitor.core.data,
@@ -60,6 +59,7 @@ def run():
             CryptoSlate(),
         ]),
         PriceWatchAgent(CoinGecko()),
+        TradingAgent(),
     ]
     # Create threads
     threads = [
@@ -80,6 +80,8 @@ def run():
     # Wait for all threads to finish
     for t in threads:
         t.join()
+
+    logging.info("Agents are tamed!\nShutting down...")
 
 
     # TODO: Research Loop (News + Summarize)
