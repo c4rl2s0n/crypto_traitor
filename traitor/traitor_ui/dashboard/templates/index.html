@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<canvas id="chart" width="400" height="200"></canvas>
+
+{% include "chart.html" with
+   chart_id="randomChart"
+   chart_type="line"
+   chart_data=initial_chart_data
+   ws_path="/ws/live/"
+%}
+{% comment %} 
+<script type="text/javascript">
+const ws = new WebSocket("ws://" + window.location.host + "/ws/live/");
+const ctx = document.getElementById("chart").getContext("2d");
+
+const chart = new Chart(ctx, {
+    type: "line",
+    data: { labels: [], datasets: [{ data: [] }] },
+    options: { animation: false }
+});
+
+function push_value(value){
+    chart.data.labels.push("");
+    chart.data.datasets[0].data.push(msg.value);
+    if (chart.data.labels.length > 80) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+    chart.update();
+}
+
+ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if(msg.type === "initial"){
+        for(var v in msg.values){
+            push_value(v)
+        }
+    }
+    else if(msg.type === "update"){
+        push_value(msg.value)
+    }
+};
+</script> {% endcomment %}
+</body>
+</html>

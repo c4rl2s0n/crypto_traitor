@@ -1,10 +1,26 @@
-from traitor.core.data.models import Coin
-from traitor.core.data.repositories import CoinRepository, PricesRepository
+import os
+
+import uvicorn
+from django.core.management import execute_from_command_line
+
+from traitor.core.data.repositories import CoinRepository
 from traitor.core.config import container
-from traitor.core.research.market.coingecko import CoinGecko
 from traitor.core.research.news.sources.cryptoslate import CryptoSlate
 from traitor.core.services import CoinService, ResearchService
 
+def run_webserver():
+    from traitor.traitor_ui.dashboard.service import start_random_service
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "traitor.traitor_ui.web.settings")
+    start_random_service()
+    uvicorn.run(
+        "traitor.traitor_ui.web.asgi:application",
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+    )
+
+    # execute_from_command_line(["manage.py", "runserver", "127.0.0.1:8000"])
 
 def run():
     container.init_resources()
@@ -24,26 +40,6 @@ def run():
 
     research_service = ResearchService()
     research_service.research_news([CryptoSlate()])
-
-    # article_repo = container.article_repository()
-    # coin_repo = container.coin_repository()
-    # price_repo = container.price_repository()
-    # journalist = Journalist(article_repo, coin_repo, NewsSummarAIzer(LLMGemini(), container.prompts()))
-    #
-    # # journalist.lookup_coins([CoinMarketCap()])
-    # # journalist.research_news([CoinDesk()])
-    # # journalist.research_news([CryptoSlate()])
-    #
-    # # lookup all the available coins from CoinGecko
-    # coin_gecko = container.coin_gecko()
-    # # coins = coin_gecko.get_coins()
-    # # coin_repo.add_all(coins)
-    #
-    # coins = coin_repo.get_by_coingecko_id(['bitcoin', 'zcash', 'monero'])
-    # # prices = coin_gecko.get_prices(coins=coins)
-    # # price_repo.add_prices(prices)
-    # pdict = price_repo.get_prices_dict(coins[0].id)
-    # pdf = price_repo.get_prices_df(coins[0].id)
 
     container.shutdown_resources()
 
