@@ -1,5 +1,7 @@
+import logging
+
 import requests
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Set
 from bs4 import BeautifulSoup
 from traitor.core.data.models import Article, NewsSourceCategory
@@ -25,13 +27,13 @@ class CryptoSlate(NewsSource):
         return categories
 
     def get_articles_for_category(self, category: NewsSourceCategory) -> Set[str]:
-        print(f"DEBUG: Downloading URL: {category.url}")
+        logging.debug(f"DEBUG: Downloading URL: {category.url}")
         try:
             response = requests.get(category.url, headers=self.HEADERS, timeout=10)
             soup = BeautifulSoup(response.content, 'html.parser')
             return self._parse_articles_in_category(category, soup)
         except Exception as e:
-            print(f"ERROR: Exception connecting to {category.url}: {e}")
+            logging.exception(f"ERROR: Exception connecting to {category.url}")
             return set()
 
     def _parse_articles_in_category(self, category: NewsSourceCategory, soup: BeautifulSoup) -> set[str]:
@@ -39,7 +41,7 @@ class CryptoSlate(NewsSource):
 
         # We look for all articles on the page
         articles = soup.find_all('article')
-        print(f"DEBUG: Found {len(articles)} <article> blocks in {category.name}")
+        logging.debug(f"DEBUG: Found {len(articles)} <article> blocks in {category.name}")
 
         for article in articles:
             a_tag = article.find('a')
@@ -60,13 +62,13 @@ class CryptoSlate(NewsSource):
 
                 # If there are NO dashes in the last part, we assume it's a category/hub and skip it
                 if '-' not in slug:
-                    print(f"DEBUG: Discarded (no dashes): {slug}")
+                    logging.debug(f"DEBUG: Discarded (no dashes): {slug}")
                     continue
 
                 # If it passes the filter, we add it
                 links.add(link)
 
-        print(f"DEBUG: Valid URLs after filtering: {len(links)}")
+        logging.debug(f"DEBUG: Valid URLs after filtering: {len(links)}")
         return links
 
     def get_article(self, url: str, category: str) -> Article:
@@ -83,7 +85,7 @@ class CryptoSlate(NewsSource):
 
             return article
         except Exception as e:
-            print(f"ERROR parsing article {url}: {e}")
+            logging.exception(f"ERROR parsing article {url}")
             # Return an empty article but WITH URL so it doesn't break, although ideally we should handle the error better
             return Article(url=url, category=category, title="Error", date_published=datetime.now().date(), content="")
 
@@ -118,7 +120,7 @@ class CryptoSlate(NewsSource):
 
         return ""
 
-    def _get_date(self, soup: BeautifulSoup) -> datetime.date:
+    def _get_date(self, soup: BeautifulSoup) -> date:
         meta_date = soup.find('meta', property='article:published_time')
         if meta_date:
             try:

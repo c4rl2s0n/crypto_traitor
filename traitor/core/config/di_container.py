@@ -7,7 +7,7 @@ from traitor.core.tools.ai.agents.llm_gemini import LLMGemini
 
 class Container(containers.DynamicContainer):
     config = providers.Configuration()
-    prompts = providers.Singleton(PROMPTS)
+    prompts = providers.ThreadSafeSingleton(PROMPTS)
     summarize_agent = providers.Factory(LLMGemini, model='gemini-2.5-flash')
 
     def __init__(self):

@@ -1,48 +1,34 @@
 import json
 from datetime import datetime, timedelta
 
-import requests
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
 from requests import Response
 
-from traitor.core.data.models import Price, Coin, ApiCoinID, CoinUrl
+from traitor.core.data.models import *
+from traitor.core.research.market import *
+from traitor.core.research.market.exceptions import *
 from traitor.core.tools import api_bool, urljoin, strings_from_dict
 
 
-class ApiNotSupportedException(Exception):
-    pass
+class CoinGecko(CryptoApi):
 
-
-class CoinGecko(object):
     name: str = "CoinGecko"
     base_url: str = "https://api.coingecko.com/api/v3/"
-    request_count: dict[datetime, int] = {}
 
-    currency = "usd"
+    ratelimit_count: int = 30
+    ratelimit_window = timedelta(minutes=1)
 
     @inject
     def __init__(self, api_key: str = Provide["config.api_keys.COINGECKO"]):
         self.api_key = api_key
 
-    def _request(self, api: str) -> Response:
-        headers = {
+    def _get_request_headers(self, api: str | None = None) -> dict[str, str]:
+        return {
             "x-cg-demo-api-key": self.api_key,
         }
-        self._count_request()
-        response = requests.get(urljoin(self.base_url, api), headers=headers, timeout=10)
-        self._check_response_code(response)
-        return response
 
-    def _check_coin(self, coin: Coin) -> ApiCoinID:
-        """
-        Check, if the given coin can be handled by the api
-        :param coin:
-        :return:
-        """
-        coin_api_id = coin.get_api(self.name)
-        if coin_api_id is None:
-            raise ApiNotSupportedException(f"{coin.name} not supported for {self.name}")
-        return coin_api_id
+    def _get_request_url(self, api: str) -> str:
+        return urljoin(self.base_url, api)
 
     def _check_response_code(self, response: Response):
         """
@@ -52,25 +38,16 @@ class CoinGecko(object):
         """
         if response.status_code == 401:
             # access denied
-            pass
+            raise AccessDeniedException()
         elif response.status_code == 429:
             # too many requests; probably exceeded rate limit
-            # TODO: somehow reschedule
-            pass
+            raise RateLimitException()
         elif response.status_code == 10002:
             # missing API key
-            pass
+            raise MissingApiKeyException()
         elif response.status_code == 10010 or response.status_code == 10011:
             # invalid API key
-            pass
-        # TODO: maybe raise exceptions?
-
-    def _count_request(self):
-        now = datetime.now().replace(second=0, microsecond=0)
-        if now not in self.request_count:
-            self.request_count[now] = 1
-        else:
-            self.request_count[now] += 1
+            raise BadApiKeyException()
 
     def get_coins(self) -> list[Coin]:
         """
@@ -87,56 +64,26 @@ class CoinGecko(object):
                 ) for c in response]
         return coins
 
-    def get_coin_info(self, coin: Coin,
-                      localization: bool = False,
-                      tickers: bool = False,
-                      market_data: bool = False,
-                      community_data: bool = False,
-                      developer_data: bool = False,
-                      sparkline: bool = False,) -> Coin:
-        """
-        https://docs.coingecko.com/v3.0.1/reference/coins-list
-        :return:
-        """
-        api = "/coins/list/"
-        r = self._request(api)
-        response = json.loads(r.text)
-        coins = [Coin(id_coingecko=c["id"], symbol=c["symbol"], name=c["name"]) for c in response]
-        return coins
-
-    def get_ohcl(self):
-        """
-        https://docs.coingecko.com/v3.0.1/reference/coins-id-ohlc
-        :return:
-        """
-
-        api = "/coins/list/"
-        r = self._request(api)
-        return r.text
-
-    def get_current_prices(self,
-                           coins: list[Coin],
-                           include_market_cap: bool = True,
-                           include_24h_vol: bool = True,
-                           include_24h_change: bool = True
-                           ) -> list[Price]:
+    def get_current_prices(self, coins: list[Coin]) -> list[Price]:
         """
         Get the current price for a list of coins
         https://docs.coingecko.com/v3.0.1/reference/simple-price
         :return:
         """
-        coin_ids = [c.id_coingecko for c in coins]
+        coins = self._supported_coins(coins)
+        api_coin_ids = [c.get_api(self.name).api_coin_id for c in coins]
         api = (f"/simple/price?vs_currencies={self.currency}"
-               f"&ids={','.join(coin_ids)}"
-               f"&include_market_cap={api_bool(include_market_cap)}"
-               f"&include_24hr_vol={api_bool(include_24h_vol)}"
-               f"&include_24hr_change={api_bool(include_24h_change)}"
+               f"&ids={','.join(api_coin_ids)}"
+               f"&include_market_cap={api_bool(True)}"
+               f"&include_24hr_vol={api_bool(True)}"
+               f"&include_24hr_change={api_bool(True)}"
                f"&include_last_updated_at=true")
         r = self._request(api)
         response = json.loads(r.text)
         prices = []
         for coin in coins:
-            c_info = response[coin.id_coingecko]
+            api_coin_id = coin.get_api(self.name).api_coin_id
+            c_info = response[api_coin_id]
             time = datetime.fromtimestamp(float(c_info["last_updated_at"]))
             prices.append(Price(
                 coin_id=coin.id,
@@ -149,11 +96,11 @@ class CoinGecko(object):
             ))
         return prices
 
-    def get_coin_historical_prices_precise(self,
-                                           coin: Coin,
-                                           t_from: datetime = None,
-                                           t_to: datetime = None
-                                           ) -> list[Price]:
+    def get_coin_historical_prices(self,
+                                   coin: Coin,
+                                   t_from: datetime = None,
+                                   t_to: datetime = None
+                                   ) -> list[Price]:
         """
         gets the data in 3-month blocks to obtain hourly accuracy
         https://docs.coingecko.com/v3.0.1/reference/coins-id-market-chart-range
@@ -177,23 +124,21 @@ class CoinGecko(object):
             t_from = min_from
         if t_to is None or t_to < t_from:
             t_to = datetime.now()
-        t_delta = t_to - t_from
-        if t_delta.days <= 90:
-            # less than 90 days can be obtained directly
-            return self.get_coin_historical_prices(coin, t_from, t_to)
+
         tmp_to = t_to
         result: list[Price] = []
         while tmp_to > t_from:
-            tmp_from = max(t_from, tmp_to - timedelta(days=89)) # , hours=23, minutes=59))
-            result.extend(self.get_coin_historical_prices(coin, tmp_from, tmp_to))
+            # obtain data in chunks of 89 days
+            tmp_from = max(t_from, tmp_to - timedelta(days=89))
+            result.extend(self._get_coin_historical_prices(coin, tmp_from, tmp_to))
             tmp_to = tmp_from
         return result
 
-    def get_coin_historical_prices(self,
-                                   coin: Coin,
-                                   t_from: datetime = None,
-                                   t_to: datetime = None
-                                   ) -> list[Price]:
+    def _get_coin_historical_prices(self,
+                                    coin: Coin,
+                                    t_from: datetime = None,
+                                    t_to: datetime = None
+                                    ) -> list[Price]:
         """
         https://docs.coingecko.com/v3.0.1/reference/coins-id-market-chart-range
         :param coin:
@@ -241,23 +186,17 @@ class CoinGecko(object):
             result.append(price)
         return result
 
-    def update_coin_info(self,
-                      coin: Coin,
-                      community_data: bool = False,
-                      developer_data: bool = False,
-                      ) -> Coin:
+    def update_coin_info(self, coin: Coin ) -> Coin:
         """
         https://docs.coingecko.com/v3.0.1/reference/coins-id?playground=open
         :param coin:
-        :param community_data:
-        :param developer_data:
         :return: updated Coin
         """
         api_coin_id = self._check_coin(coin)
 
         api = (f"/coins/{api_coin_id.api_coin_id}?localization=false"
-               f"&community_data={api_bool(community_data)}"
-               f"&developer_data={api_bool(developer_data)}")
+               f"&community_data={api_bool(False)}"
+               f"&developer_data={api_bool(False)}")
         r = self._request(api)
         response = json.loads(r.text)
 

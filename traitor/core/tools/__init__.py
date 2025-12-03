@@ -1,6 +1,6 @@
 from . import scraper
 from .ai.llm_agent import LLMAgent
-from .ai.summarizer import NewsSummarAIzer
+from traitor.core.research.news.summarizer import NewsSummarAIzer
 from .api import *
 
 __all__ = [

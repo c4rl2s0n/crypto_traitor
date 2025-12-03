@@ -1,4 +1,9 @@
 from .coin_service import CoinService
-from .research_service import ResearchService
+from .market_research_service import MarketResearchService
+from .news_research_service import NewsResearchService
 
-__all__ = [CoinService, ResearchService]
+__all__ = [
+    CoinService,
+    MarketResearchService,
+    NewsResearchService,
+]

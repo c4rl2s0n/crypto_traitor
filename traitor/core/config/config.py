@@ -5,5 +5,5 @@ class PROMPTS:
     crypto_hft_json = "traitor/core/assets/prompts/prompt_crypto_hft_json.md"
 
 
-class VIEWS:
+class DBViews:
     daily_ohlc = "daily_ohlc"

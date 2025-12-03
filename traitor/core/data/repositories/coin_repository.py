@@ -1,45 +1,49 @@
 from typing import List
 
 from dependency_injector.wiring import inject, Provide
-from sqlalchemy import  select
+from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 
 from traitor.core.data.db import Database
 from traitor.core.data.models import ApiCoinID
 from traitor.core.data.models.coin import Coin
+from traitor.core.data.repositories.repository import Repository
 
 
-class CoinRepository(object):
-    @inject
-    def __init__(self, db: Database = Provide["db"]):
-        self.db = db
+class CoinRepository(Repository):
+    def __init__(self):
+        super().__init__(model=Coin)
 
-    def empty(self) -> bool:
-        exists = select(self.db.session.query(Coin).exists())
-        return not self.db.session.execute(exists).scalar()
+    def get_by_api_ids(self, api_name: str, ids: list[str]) -> list[Coin]:
+        with self.db.read_session() as s:
+            return (s.query(Coin)
+                    .options(selectinload(Coin.apis))
+                    .join(Coin.apis)
+                    .filter(
+                        Coin.apis.any(
+                            and_(
+                                ApiCoinID.api_name.is_(api_name),
+                                ApiCoinID.api_coin_id.in_(ids),
+                            )
+                        ))
+                    .all())
 
-    def add(self, coin: Coin):
-        self.db.session.add(coin)
-        self.db.session.commit()
-
-    def add_all(self, coins: List[Coin]):
-        self.db.session.add_all(coins)
-        self.db.session.commit()
-
-    def get_all(self) -> list[Coin]:
-        return self.db.session.query(Coin).all()
-
-    def get_by_coingecko_ids(self, ids: list[str]) -> list[Coin]:
-        return (self.db.session
-                .query(Coin)
+    def get_by_symbols(self, symbols: list[str]) -> list[Coin]:
+        with self.db.read_session() as s:
+            return (s.query(Coin)
+                    .options(selectinload(Coin.apis))
                 .join(Coin.apis)
-                .filter(
-                    Coin.apis.any(
-                        ApiCoinID.api_coin_id.in_(ids)
-                    ))
+                .filter(Coin.symbol.in_(symbols))
+                .all())
+
+    def get_by_names(self, names: list[str]) -> list[Coin]:
+        with self.db.read_session() as s:
+            return (s.query(Coin)
+                    .options(selectinload(Coin.apis))
+                .join(Coin.apis)
+                .filter(Coin.name.in_(names))
                 .all())
 
     def get_active(self) -> List[Coin]:
-        return self.db.session.query(Coin).filter(Coin.active).all()
-
-    def commit(self):
-        self.db.session.commit()
+        with self.db.read_session() as s:
+            return s.query(Coin).options(selectinload(Coin.apis)).filter(Coin.active).all()

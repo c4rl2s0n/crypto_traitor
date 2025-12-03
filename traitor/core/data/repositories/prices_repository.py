@@ -4,16 +4,16 @@ from dependency_injector.wiring import inject, Provide
 
 from sqlalchemy import text
 
-from traitor.core.config import VIEWS
+from traitor.core.config import DBViews
 from traitor.core.data.db import Database
 from traitor.core.data.models import Price
+from traitor.core.data.repositories.repository import Repository
 
 
-class PricesRepository(object):
+class PricesRepository(Repository):
 
-    @inject
-    def __init__(self, db: Database = Provide["db"]):
-        self.db = db
+    def __init__(self):
+        super().__init__(model=Price)
 
     def get_last_price_date(self, coin_id: str) -> datetime | None:
         """
@@ -33,6 +33,8 @@ class PricesRepository(object):
             return None
 
     def add_prices(self, prices: list[Price]):
+        if len(prices) == 0:
+            return
         with self.db.engine.begin() as conn:
             conn.execute(
                 text("""INSERT INTO prices(coin_id, coin_symbol, time, value, market_cap, trading_vol_24h, value_change_24h) 
@@ -64,7 +66,7 @@ class PricesRepository(object):
 
     def _get_prices_daily_ohlc_query(self, coin_id: str, start: datetime | None = None, end: datetime | None = None) -> (str, dict[str]):
         query = (f"SELECT coin_id, coin_symbol, day, open, high, low, close "
-                 f"FROM {VIEWS.daily_ohlc} "
+                 f"FROM {DBViews.daily_ohlc} "
                  f"WHERE coin_id = :id")
         parameters = {"id": coin_id}
         if start is not None:

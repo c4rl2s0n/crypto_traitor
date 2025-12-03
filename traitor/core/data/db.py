@@ -1,25 +1,56 @@
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
+from typing import ContextManager
 
-from traitor.core.config import VIEWS
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker, Session
+
+from traitor.core.config import DBViews
 from traitor.core.data import Base
 from traitor.core.data.models import *
 
 
 class Database(object):
     def __init__(self, path: str):
-        self.engine = create_engine(path, echo=True)
+        self.engine = create_engine(
+                        path,
+                        pool_size=5,
+                        max_overflow=10,
+                        pool_timeout=30,
+                        pool_recycle=1800,
+                        echo=False)
 
     def __enter__(self):
         print(f"Database connecting to {self.engine.url}")
         self._prepare_database()
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        self.session = self.SessionLocal()
+        self.SessionFactory = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=self.engine)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         print("Closing Database")
         self.close()
+
+    @contextmanager
+    def read_session(self):
+        session = self.SessionFactory()
+        try:
+            yield session
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @contextmanager
+    def write_session(self):
+        session = self.SessionFactory()
+        try:
+            yield session
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def _prepare_database(self):
         # important for SQLAlchemy to correctly register the models!
@@ -39,7 +70,7 @@ class Database(object):
 
         with self.engine.connect() as conn:
             conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(
-                f"""CREATE MATERIALIZED VIEW IF NOT EXISTS {VIEWS.daily_ohlc}
+                f"""CREATE MATERIALIZED VIEW IF NOT EXISTS {DBViews.daily_ohlc}
                     WITH (timescaledb.continuous) AS
                     SELECT
                         coin_id,
@@ -55,8 +86,9 @@ class Database(object):
 
     def _delete_database(self):
         with self.engine.begin() as conn:
-            conn.execute(text(f"DROP MATERIALIZED VIEW IF EXISTS {VIEWS.daily_ohlc} CASCADE"))
+            conn.execute(text(f"DROP MATERIALIZED VIEW IF EXISTS {DBViews.daily_ohlc} CASCADE"))
             Base.metadata.drop_all(conn)
 
+
     def close(self):
-        self.session.close()
+        self.engine.dispose(close=True)

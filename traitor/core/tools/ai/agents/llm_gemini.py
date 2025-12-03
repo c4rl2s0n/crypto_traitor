@@ -6,8 +6,9 @@ from traitor.core.tools.ai.llm_agent import LLMAgent
 
 
 class LLMGemini(LLMAgent):
-
+    name = "Gemini"
     def __init__(self, model: str = 'gemini-2.5-flash'):
+        self.model_name = model
         self.model = genai.GenerativeModel(model)
 
     def process_text(self, contents: List[str]) -> str:

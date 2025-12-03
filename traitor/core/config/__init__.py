@@ -4,5 +4,5 @@ from .di_container import container
 
 __all__ = [
     "container",
-    "PROMPTS", "VIEWS"
+    "PROMPTS", "DBViews"
 ]

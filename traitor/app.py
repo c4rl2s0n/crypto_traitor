@@ -1,55 +1,90 @@
-from traitor.core.data.models import Coin
-import traitor.core.data.repositories.article_repository 
-import traitor.core.services.research_service
-from traitor.core.data.repositories import CoinRepository, PricesRepository
-from traitor.core.config import container
-from traitor.core.research.market.coingecko import CoinGecko
+import logging
+import threading
+import time
+
+import traitor
+from traitor.core.agents import *
+from traitor.core.agents.agent_base import stop_event
+from traitor.core.config import container, logs
+from traitor.core.research.market.apis import CoinGecko
+from traitor.core.research.news.sources import CoinDesk
 from traitor.core.research.news.sources.cryptoslate import CryptoSlate
-from traitor.core.services import CoinService, ResearchService
+from traitor.core.services import CoinService
+
+
+def setup():
+    coin_service = CoinService(CoinGecko())
+
+    # populate database with available coins
+    if not coin_service.coins_loaded():
+        coin_service.load_all_coins(force=True)
+
+    coins = coin_service.get_active_coins()
+    if len(coins) == 0:
+        coins = coin_service.get_coins_by_name(['Bitcoin', 'Zcash', 'Monero'])
+        for c in coins:
+            coin_service.activate_coin(c)
+    for coin in coins:
+        coin_service.load_price_history(coin)
 
 
 def run():
+    """
+    This function starts the lifecycle of the bot including
+    - proper initial setup
+    - running the different 'agents' in separate threads
+    :return:
+    """
+    logs.setup()
+
+    # set up the DI container
     container.init_resources()
     container.wire(modules=[
         __name__,
-        traitor.core.data.repositories.article_repository, 
-        traitor.core.services.research_service
+        # traitor.core.data.repositories.article_repository,
+        traitor.core.data.repositories,
+        traitor.core.data.repositories.repository,
+        # traitor.core.services.news_research_service
+        traitor.core.services,
+        traitor.core.research,
+        traitor.core.data,
+        traitor.core.tools,
     ])
 
-    # TODO: Setup
+    # set up the bot
+    setup()
+
+    agents: list[AgentBase] = [
+        NewsResearchAgent([
+            CoinDesk(),
+            CryptoSlate(),
+        ]),
+        PriceWatchAgent(CoinGecko()),
+    ]
+    # Create threads
+    threads = [
+        threading.Thread(target=agent.run,  name=agent.name) for agent in agents
+    ]
+
+    # Start threads
+    for t in threads:
+        t.start()
+
+    try:
+        while True:
+            time.sleep(0.5)  # main thread idle
+    except KeyboardInterrupt:
+        logging.info("Stopping all threads...")
+        stop_event.set()  # notify threads
+
+    # Wait for all threads to finish
+    for t in threads:
+        t.join()
+
+
     # TODO: Research Loop (News + Summarize)
     # TODO: Research Loop (Market + Analyze + Summarize)
     # TODO: Trading Loop
-    coin_service = CoinService()
-    coin_service.load_all_coins()
-
-    coin_repo = CoinRepository()
-    coins = coin_repo.get_by_coingecko_ids(['bitcoin', 'zcash', 'monero'])
-    for c in coins:
-        coin_service.activate_coin(c)
-
-    research_service = ResearchService()
-    research_service.research_news([CryptoSlate()])
-
-    # article_repo = container.article_repository()
-    # coin_repo = container.coin_repository()
-    # price_repo = container.price_repository()
-    # journalist = Journalist(article_repo, coin_repo, NewsSummarAIzer(LLMGemini(), container.prompts()))
-    #
-    # # journalist.lookup_coins([CoinMarketCap()])
-    # # journalist.research_news([CoinDesk()])
-    # # journalist.research_news([CryptoSlate()])
-    #
-    # # lookup all the available coins from CoinGecko
-    # coin_gecko = container.coin_gecko()
-    # # coins = coin_gecko.get_coins()
-    # # coin_repo.add_all(coins)
-    #
-    # coins = coin_repo.get_by_coingecko_id(['bitcoin', 'zcash', 'monero'])
-    # # prices = coin_gecko.get_prices(coins=coins)
-    # # price_repo.add_prices(prices)
-    # pdict = price_repo.get_prices_dict(coins[0].id)
-    # pdf = price_repo.get_prices_df(coins[0].id)
 
     container.shutdown_resources()
 

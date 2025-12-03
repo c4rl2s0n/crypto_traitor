@@ -1,0 +1,4 @@
+
+
+class MarketResearchService(object):
+    pass

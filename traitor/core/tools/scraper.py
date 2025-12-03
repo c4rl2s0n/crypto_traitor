@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar, Generic, List
+from typing import Callable, TypeVar
 from bs4 import BeautifulSoup, Tag
 import requests
 
@@ -25,7 +25,7 @@ def extract_many(
     path: str,
     selector: str,
     fn: Callable[[Tag], T]
-) -> List[T]:
+) -> list[T]:
     html = fetch(path)
     soup = parse(html)
     return [fn(node) for node in soup.select(selector)]
