@@ -1,5 +1,6 @@
 import logging
 
+from dateutil.relativedelta import relativedelta
 from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
@@ -13,13 +14,14 @@ class TradingAgent(AgentBase):
     name = "Trading"
 
     @inject
-    def __init__(self, interval = Provide["config.intervals.TRADING"]):
+    def __init__(self, interval: relativedelta = Provide["config.intervals.TRADING"]):
         self.interval = interval
         self.llm = LLMGemini()
         logging.info(f"Init TradingAgent")
 
     def _do_task(self):
-        logging.info("Do some trading...")
+        logging.info("Pretend to do some trading...")
+        return
         try:
             poem = self.llm.process_text([
                 "You are an extraordinary poet with deep love for money and capitalism!",

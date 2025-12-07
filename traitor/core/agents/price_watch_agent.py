@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+from dateutil.relativedelta import relativedelta
 from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
@@ -14,12 +15,12 @@ class PriceWatchAgent(AgentBase):
     interval = timedelta(minutes=5)
 
     @inject
-    def __init__(self, crypto_api: CryptoApi, interval = Provide["config.intervals.PRICES"]):
+    def __init__(self, crypto_api: CryptoApi, interval:relativedelta = Provide["config.intervals.PRICE_WATCH"]):
         self.interval = interval
         self.coin_repo = CoinRepository()
         self.coins = self.coin_repo.get_active()
         self.coin_service = CoinService(crypto_api=crypto_api)
-        logging.info(f"Init PriceWatchAgent.\n\tAPI: {crypto_api.name}\n\tActive coins: {self.coins}")
+        logging.info(f"Init Agent {self.name}.\n\tAPI: {crypto_api.name}\n\tActive coins: {self.coins}")
 
     def _do_task(self):
         # TODO: check if active coins have changed! This should be handled through an event to avoid unnecessary polling

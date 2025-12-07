@@ -199,4 +199,6 @@ The UI is considered nice-to-have, but actually has no real priority before the 
       - could be useful to automatically send transactions
       - should work at least for ethereum (or all ether-based chains?)
       - https://developer.metamask.io/key/active-endpoints
-      - 
+
+# NOTES
+- due to tsfresh-dependencies, python version >= 3.14 are not supported (because of numba package)

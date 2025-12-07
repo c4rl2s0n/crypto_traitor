@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from traitor.core.config import DBViews
 from traitor.core.data.db import Database
-from traitor.core.data.models import Price
+from traitor.core.data.models import Price, PriceFeature
 from traitor.core.data.repositories.repository import Repository
 
 
@@ -51,11 +51,11 @@ class PricesRepository(Repository):
                 } for price in prices]
             )
 
-    def _get_prices_query(self, coin_id: str, start: datetime | None = None, end: datetime | None = None) -> (str, dict[str]):
+    def _get_prices_query(self, coin_ids: list[str], start: datetime | None = None, end: datetime | None = None) -> (str, dict[str, str | list[str]]):
         query = (f"SELECT coin_id, coin_symbol, time, value, market_cap, trading_vol_24h, value_change_24h "
                  f"FROM prices "
-                 f"WHERE coin_id = :id")
-        parameters = {"id": coin_id}
+                 f"WHERE coin_id = ANY(:ids)")
+        parameters: dict[str, str | list[str]] = {"ids": coin_ids}
         if start is not None:
             query += f" {'AND time >= :start' if start is not None else ''} "
             parameters["start"] = start.isoformat()
@@ -77,15 +77,15 @@ class PricesRepository(Repository):
             parameters["end"] = end.isoformat()
         return query, parameters
 
-    def get_prices_dict(self, coin_id: str, start: datetime | None = None, end: datetime | None = None) -> list[dict]:
-        query, parameters = self._get_prices_query(coin_id, start, end)
+    def get_prices_dict(self, coin_ids: list[str], start: datetime | None = None, end: datetime | None = None) -> list[dict]:
+        query, parameters = self._get_prices_query(coin_ids, start, end)
         with self.db.engine.begin() as conn:
             result = conn.execute(text(query), parameters)
             # TODO: turn results into dict
             return [dict(row) for row in result.mappings()]
 
-    def get_prices_df(self, coin_id: str, start: datetime | None = None, end: datetime | None = None) -> pd.DataFrame:
-        query, parameters = self._get_prices_query(coin_id, start, end)
+    def get_prices_df(self, coin_ids: list[str], start: datetime | None = None, end: datetime | None = None) -> pd.DataFrame:
+        query, parameters = self._get_prices_query(coin_ids, start, end)
         with self.db.engine.begin() as conn:
             df = pd.read_sql(
                 text(query),
@@ -103,5 +103,3 @@ class PricesRepository(Repository):
                 params=parameters
             )
             return df
-
-
