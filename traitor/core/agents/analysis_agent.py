@@ -29,11 +29,14 @@ class AnalysisAgent(AgentBase):
         
         for coin in active_coins:
             try:
-                # 1. Análisis Diario (24h)
+                # 1. Daily analysis (24h)
                 #self.service.analyze_coin(coin, "24h", days_back=1)
                 
-                # 2. Análisis Semanal (7d) - Opcional, consume más tokens
-                self.service.analyze_coin(coin, "30d", days_back=30)
+                # 2. Weekly analysis (7d) - Optional, consumes more tokens
+                self.service.analyze_coin(coin, "7d", days_back=7)
+
+                # 3. Monthly analysis (30d) - Optional, consumes more tokens
+                #self.service.analyze_coin(coin, "30d", days_back=30)
                 
             except Exception as e:
                 logging.exception(f"Error analyzing {coin.name}")
