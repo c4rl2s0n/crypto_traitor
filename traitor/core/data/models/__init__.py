@@ -4,5 +4,6 @@ from .coin import *
 from .coin_url import *
 from .news_source_category import NewsSourceCategory
 from .price import Price
+from .coin_summary import *
 
-__all__ = ["Article", "Coin", "CoinUrl", "ApiCoinID", "NewsSourceCategory", "Price"]
+__all__ = ["Article", "Coin", "CoinUrl", "ApiCoinID", "NewsSourceCategory", "Price", "CoinSummary"]

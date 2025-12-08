@@ -43,6 +43,7 @@ class Container(containers.DynamicContainer):
         self.config.intervals.PRICES.from_value(INTERVALS.prices)
         self.config.intervals.NEWS.from_value(INTERVALS.news)
         self.config.intervals.TRADING.from_value(INTERVALS.trading)
+        self.config.intervals.ANALYSIS.from_value(INTERVALS.analysis)
 
 
 

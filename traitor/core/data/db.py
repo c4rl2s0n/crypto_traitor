@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from typing import ContextManager
 
+from contextlib import contextmanager
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -19,10 +20,12 @@ class Database(object):
                         pool_recycle=1800,
                         echo=False)
 
-    def __enter__(self):
         print(f"Database connecting to {self.engine.url}")
         self._prepare_database()
         self.SessionFactory = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=self.engine)
+        self.session = self.SessionFactory()
+
+    def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -65,7 +68,10 @@ class Database(object):
         # Setup TimescaleDB and hypertables
         with self.engine.begin() as conn:
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS timescaledb;"))
-            conn.execute(text("SELECT create_hypertable('prices', 'time', if_not_exists => TRUE, migrate_data => TRUE);"))
+            try:
+                conn.execute(text("SELECT create_hypertable('prices', 'time', if_not_exists => TRUE, migrate_data => TRUE);"))
+            except Exception as e:
+                pass
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_coin_id_time ON prices(coin_id, time DESC);"))
 
         with self.engine.connect() as conn:
@@ -91,4 +97,6 @@ class Database(object):
 
 
     def close(self):
+        if hasattr(self, 'session') and self.session:
+            self.session.close()
         self.engine.dispose(close=True)

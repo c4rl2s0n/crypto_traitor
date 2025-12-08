@@ -10,6 +10,8 @@ from traitor.core.research.market.apis import CoinGecko
 from traitor.core.research.news.sources import CoinDesk
 from traitor.core.research.news.sources.cryptoslate import CryptoSlate
 from traitor.core.services import CoinService
+import traitor.core.data.repositories.analysis_repository
+import traitor.core.agents.analysis_agent
 
 
 def setup():
@@ -43,6 +45,8 @@ def run():
         __name__,
         traitor.core.data.repositories,
         traitor.core.data.repositories.repository,
+        traitor.core.data.repositories.analysis_repository,
+        traitor.core.agents.analysis_agent,
         traitor.core.agents,
         traitor.core.services,
         traitor.core.research,
@@ -54,12 +58,13 @@ def run():
     setup()
 
     agents: list[AgentBase] = [
-        NewsResearchAgent([
-            CoinDesk(),
-            CryptoSlate(),
-        ]),
-        PriceWatchAgent(CoinGecko()),
-        TradingAgent(),
+        #NewsResearchAgent([
+        #    CoinDesk(),
+        #    CryptoSlate(),
+        #]),
+        #PriceWatchAgent(CoinGecko()),
+        #TradingAgent(),
+        AnalysisAgent(),
     ]
     # Create threads
     threads = [

@@ -10,6 +10,7 @@ class INTERVALS:
     prices = timedelta(minutes=5)
     news = timedelta(hours=1)
     trading = timedelta(hours=1)
+    analysis = timedelta(hours=1)
 
 class DBViews:
     daily_ohlc = "daily_ohlc"
