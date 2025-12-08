@@ -14,7 +14,6 @@ class AnalysisRepository:
         self.db.session.commit()
 
     def get_articles_in_range(self, start_date: datetime) -> List[Article]:
-        """Recupera artículos publicados desde start_date hasta hoy que tengan resumen"""
         return self.db.session.query(Article).filter(
             Article.date_published >= start_date.date(),
             Article.summary.isnot(None),

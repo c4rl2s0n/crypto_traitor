@@ -15,28 +15,26 @@ class AnalysisService:
     def analyze_coin(self, coin: Coin, timeframe_name: str, days_back: int):
         logging.info(f"Analyzing {coin.name} over last {timeframe_name}...")
         
-        # 1. Definir rango de fechas
         start_date = datetime.now() - timedelta(days=days_back)
         
-        # 2. Obtener artículos
         articles = self.repository.get_articles_in_range(start_date)
         
         relevant_data = []
         total_sentiment = 0.0
         count = 0
 
-        # 3. Procesar JSONs y filtrar por moneda
         for article in articles:
             try:
-                # Limpiamos bloques de código markdown si existen ```json ... ```
                 raw_json = article.summary.replace("```json", "").replace("```", "").strip()
                 data = json.loads(raw_json)
                 
-                # Buscamos si la moneda está en 'assets'
                 assets = data.get("assets", [])
                 for asset in assets:
-                    # Comprobamos Ticker o Nombre (ej: BTC o Bitcoin)
-                    if asset.get("ticker") == coin.symbol or coin.name.lower() in asset.get("ticker", "").lower():
+                    ticker = asset.get("ticker") 
+                    #logging.info(f"DEBUG : ASSET {ticker}")
+                    #logging.info(f"DEBUG : COIN SYMBOL {coin.symbol}")
+                    #logging.info(f"DEBUG : COIN NAME {coin.name.lower()}")
+                    if asset.get("ticker").lower() == coin.symbol.lower() or coin.name.lower() in asset.get("ticker", "").lower():
                         
                         relevant_data.append(f"- [{article.date_published}] Sentiment {asset['sentiment']}: {asset.get('reasoning')} (Event: {data.get('event_type')})")
                         
@@ -51,14 +49,11 @@ class AnalysisService:
             logging.info(f"No relevant news found for {coin.name} in {timeframe_name}")
             return
 
-        # 4. Calcular métricas
         avg_sentiment = total_sentiment / count if count > 0 else 0
 
-        # 5. Generar Meta-Resumen con LLM
         prompt = self._create_analysis_prompt(coin.name, timeframe_name, avg_sentiment, relevant_data)
         meta_summary_text = self.llm.process_text([prompt])
 
-        # 6. Guardar en BD
         summary_obj = CoinSummary(
             coin_id=coin.id,
             timeframe=timeframe_name,
