@@ -47,6 +47,7 @@ class Container(containers.DynamicContainer):
         self.config.intervals.PRICE_WATCH.from_value(INTERVALS.price_watch)
         self.config.intervals.NEWS.from_value(INTERVALS.news)
         self.config.intervals.TRADING.from_value(INTERVALS.trading)
+        self.config.intervals.ANALYSIS.from_value(INTERVALS.analysis)
 
 
 

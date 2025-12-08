@@ -79,7 +79,8 @@ def run():
         PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
         PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5))
+        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
+        AnalysisAgent(),
     ]
     # Create threads
     threads = [

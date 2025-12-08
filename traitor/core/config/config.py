@@ -27,6 +27,7 @@ class INTERVALS:
     price_watch = relativedelta(minutes=5)
     news = relativedelta(hours=1)
     trading = relativedelta(hours=1)
+    analysis=relativedelta(hours=1)
 
 class DBViews:
     daily_ohlc = "daily_ohlc"
