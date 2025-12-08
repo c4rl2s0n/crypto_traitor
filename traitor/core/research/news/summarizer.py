@@ -9,7 +9,7 @@ from traitor.core.tools.ai.llm_agent import LLMAgent
 
 class NewsSummarAIzer(object):
     @inject
-    def __init__(self, model: LLMAgent = Provide["summarize_agent"], prompts: PROMPTS = Provide["prompts"]):
+    def __init__(self, model: LLMAgent = Provide["summarize_agent_news"], prompts: PROMPTS = Provide["prompts"]):
         self.model = model
         self.prompts = prompts
 

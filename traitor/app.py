@@ -1,11 +1,17 @@
 import logging
 import threading
 import time
+from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
 
 import traitor
 from traitor.core.agents import *
 from traitor.core.agents.agent_base import stop_event
+from traitor.core.agents.price_analysis_agent import PriceAnalysisAgent
 from traitor.core.config import container, logs
+from traitor.core.data.models import PriceFeatureInterval
+from traitor.core.data.repositories import PriceFeatureRepository
 from traitor.core.research.market.apis import CoinGecko
 from traitor.core.research.news.sources import CoinDesk
 from traitor.core.research.news.sources.cryptoslate import CryptoSlate
@@ -15,6 +21,11 @@ import traitor.core.agents.analysis_agent
 
 
 def setup():
+    # delete all stored features to enforce re-analysis and avoid usage of outdated features
+    price_feature_repo = PriceFeatureRepository()
+    price_feature_repo.clear()
+
+    # scan for coins
     coin_service = CoinService(CoinGecko())
 
     # populate database with available coins
@@ -52,18 +63,27 @@ def run():
         traitor.core.research,
         traitor.core.data,
         traitor.core.tools,
+        traitor.core.tools.ai,
     ])
 
     # set up the bot
     setup()
 
     agents: list[AgentBase] = [
-        #NewsResearchAgent([
-        #    CoinDesk(),
-        #    CryptoSlate(),
-        #]),
-        #PriceWatchAgent(CoinGecko()),
-        #TradingAgent(),
+        NewsResearchAgent([
+            CoinDesk(),
+            CryptoSlate(),
+        ]),
+        TradingAgent(),
+        PriceWatchAgent(CoinGecko()),
+        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
+        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
+        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.QUARTER, interval=relativedelta(days=1)),
+        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.MONTH, interval=relativedelta(hours=6)),
+        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
+        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
+        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
+        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
         AnalysisAgent(),
     ]
     # Create threads
@@ -87,11 +107,6 @@ def run():
         t.join()
 
     logging.info("Agents are tamed!\nShutting down...")
-
-
-    # TODO: Research Loop (News + Summarize)
-    # TODO: Research Loop (Market + Analyze + Summarize)
-    # TODO: Trading Loop
 
     container.shutdown_resources()
 

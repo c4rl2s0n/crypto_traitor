@@ -1,29 +1,89 @@
-from typing import List
+import json
+import logging
+from typing import List, Union
 
-from PIL.Image import Image
 from dependency_injector.wiring import inject, Provide
 from openai import OpenAI
-
+from openai.types.responses import ResponseInputParam
 
 from traitor.core.tools.ai.llm_agent import LLMAgent
+from traitor.core.tools.ai.llm_tools import LLMTool
 
 
 class LLMOpenAI(LLMAgent):
     name = "OpenAI"
 
     @inject
-    def __init__(self, model: str = "gpt-5-nano", api_key: str = Provide["config.API_KEYS.OPENAI"]):
+    def __init__(self, model: str = "gpt-5-nano", api_key: str = Provide["config.api_keys.OPENAI"]):
         self.model_name = model
         self.client = OpenAI(api_key=api_key)
 
     def process_text(self, contents: List[str]) -> str:
-        raise NotImplementedError("TODO: Fix OpenAI implementation")
         response = self.client.responses.create(
             model=self.model_name,
-            input=contents,
+            input=self._prepare_contents(contents),
             service_tier="flex"
         )
-        return response.out_text
+        return response.output_text
 
-    def process_image(self, image: Image, context: List[str]) -> str:
-        raise NotImplementedError("TODO: Fix OpenAI implementation")
+
+    def process_tooled(self, contents: List[str], tools: list[LLMTool] = None) -> str:
+        # prepare tools
+        prepared_tools = self._prepare_tools(tools)
+        llm_contents = [
+            {"role": "user", "content": self._prepare_contents(contents)}
+        ]
+
+        openai_tools = list(prepared_tools.values())
+
+        responses = []
+        while True:
+            # 4. Issue a request to Gemini with tools allowed
+            response = self.client.responses.create(
+                model=self.model_name,
+                input=llm_contents,
+                tools=openai_tools,
+                service_tier="flex",
+            )
+
+            llm_contents += response.output
+
+            # Model will either return text or a tool call
+            has_tool = False
+            for output in response.output:
+                if output.type == "tool_calls":
+                    has_tool = True
+                    function_result = openai_tools[output.name](json.loads(output.arguments))
+
+                    llm_contents.append({
+                        "type": "function_call_output",
+                        "call_id": output.call_id,
+                        "output": json.dumps({
+                            output.name: function_result
+                        })
+                    })
+                else:
+                    logging.debug(f"Non-tool output: {output.text}")
+                    responses.append(output.text)
+
+            if not has_tool:
+                break
+
+        return "\n".join(responses)
+
+    def _prepare_contents(self, contents: list[str]) -> str:
+        return "\n".join(contents)
+
+
+    def _prepare_tools(self, tools: list[LLMTool] = None) -> dict:
+        prepared_tools = {}
+        if tools is None:
+            return prepared_tools
+        for tool in tools:
+            prepared_tools[tool.name] = {
+                "function": tool.execute,
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.parameters,
+            }
+        return prepared_tools

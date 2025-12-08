@@ -1,10 +1,8 @@
 from typing import List
 
-from dependency_injector.wiring import inject, Provide
 from sqlalchemy import select, and_
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, Session
 
-from traitor.core.data.db import Database
 from traitor.core.data.models import ApiCoinID
 from traitor.core.data.models.coin import Coin
 from traitor.core.data.repositories.repository import Repository
