@@ -3,14 +3,16 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 
+from traitor.core.config.config import PROMPTS
 from traitor.core.data.models import Coin, CoinSummary
 from traitor.core.data.repositories import AnalysisRepository
 from traitor.core.tools import LLMAgent
 
 class AnalysisService:
-    def __init__(self, repository: AnalysisRepository, llm: LLMAgent):
+    def __init__(self, repository: AnalysisRepository, llm: LLMAgent, prompts: PROMPTS):
         self.repository = repository
         self.llm = llm
+        self.prompts = prompts
 
     def analyze_coin(self, coin: Coin, timeframe_name: str, days_back: int):
         logging.info(f"Analyzing {coin.name} over last {timeframe_name}...")
@@ -51,7 +53,20 @@ class AnalysisService:
 
         avg_sentiment = total_sentiment / count if count > 0 else 0
 
-        prompt = self._create_analysis_prompt(coin.name, timeframe_name, avg_sentiment, relevant_data)
+        try:
+            with open(self.prompts.summarize_news_summaries, "r") as f:
+                template = f.read()
+        except FileNotFoundError:
+            logging.error(f"Prompt file not found: {self.prompts.summarize_news_summaries}")
+            return
+
+        prompt = template.format(
+            coin_name=coin.name,
+            timeframe=timeframe_name,
+            score=f"{avg_sentiment:.2f}", 
+            data_text="\n".join(relevant_data)
+        )
+        
         meta_summary_text = self.llm.process_text([prompt])
 
         summary_obj = CoinSummary(
@@ -62,22 +77,3 @@ class AnalysisService:
         )
         self.repository.add(summary_obj)
         logging.info(f"Analysis saved for {coin.name}: Score {avg_sentiment}")
-
-    def _create_analysis_prompt(self, coin_name: str, timeframe: str, score: float, data: List[str]) -> str:
-        data_text = "\n".join(data)
-        return f"""
-        You are a Crypto Strategic Analyst.
-        
-        Subject: {coin_name}
-        Timeframe: Last {timeframe}
-        Computed Sentiment Score: {score:.2f} (Scale -1.0 to 1.0)
-        
-        Raw Intelligence Data:
-        {data_text}
-        
-        Task:
-        Write a concise strategic report (max 3 sentences).
-        1. Explain WHY the sentiment is positive/negative based on the events.
-        2. Highlight the most critical event driving this score.
-        3. Do NOT mention "JSON" or "data", speak like a financial advisor.
-        """

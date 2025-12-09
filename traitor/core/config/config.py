@@ -6,6 +6,7 @@ class PROMPTS:
     _crypto_analyst_tags = "traitor/core/assets/prompts/prompt_crypto_analyst_tags.md"
     _crypto_hft_json = "traitor/core/assets/prompts/prompt_crypto_hft_json.md"
     _price_analysis = "traitor/core/assets/prompts/price_analysis.md"
+    _news_analysis = "traitor/core/assets/prompts/news_analysis.md"
 
     @property
     def summarize_news(self):
@@ -22,6 +23,13 @@ class PROMPTS:
         :return:
         """
         return self._price_analysis
+    
+    @property
+    def summarize_news_summaries(self):
+        """
+        Used by AnalysisService to generate the meta-summary
+        """
+        return self._news_analysis
 
 class INTERVALS:
     price_watch = relativedelta(minutes=5)

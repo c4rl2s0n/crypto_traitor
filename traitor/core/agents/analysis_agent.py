@@ -7,6 +7,7 @@ from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.repositories import CoinRepository, AnalysisRepository
 from traitor.core.services.analysis_service import AnalysisService
 from traitor.core.tools.ai import LLMGemini
+from traitor.core.config import container
 
 class AnalysisAgent(AgentBase):
     name = "Market Analyst"
@@ -18,7 +19,7 @@ class AnalysisAgent(AgentBase):
         self.coin_repo = CoinRepository()
         self.analysis_repo = AnalysisRepository()
         
-        self.service = AnalysisService(self.analysis_repo, LLMGemini())
+        self.service = AnalysisService(self.analysis_repo, LLMGemini(), container.prompts())
         
         logging.info(f"Init AnalysisAgent")
 

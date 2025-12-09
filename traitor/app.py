@@ -66,20 +66,20 @@ def run():
     setup()
 
     agents: list[AgentBase] = [
-        NewsResearchAgent([
-            CoinDesk(),
-            CryptoSlate(),
-        ]),
-        TradingAgent(),
-        PriceWatchAgent(CoinGecko()),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
+        #NewsResearchAgent([
+        #    CoinDesk(),
+        #    CryptoSlate(),
+        #]),
+        #TradingAgent(),
+        #PriceWatchAgent(CoinGecko()),
+        #PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
+        #PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.QUARTER, interval=relativedelta(days=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.MONTH, interval=relativedelta(hours=6)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
+        #PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.MONTH, interval=relativedelta(hours=6)),
+        #PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
+        #PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
+        #PriceAnalysisAgent(interval=relativedelta(minutes=5)),
         AnalysisAgent(),
     ]
     # Create threads
