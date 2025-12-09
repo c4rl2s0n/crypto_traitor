@@ -19,3 +19,9 @@ class AnalysisRepository:
             Article.summary.isnot(None),
             Article.summary != ""
         ).all()
+    
+    def get_latest_for_coin(self, coin_id: int, timeframe: str = "7d") -> CoinSummary:
+        return self.db.session.query(CoinSummary).filter_by(
+            coin_id=coin_id, 
+            timeframe=timeframe
+        ).order_by(CoinSummary.date_generated.desc()).first()

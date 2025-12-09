@@ -19,3 +19,8 @@ class PriceAnalysisRepository(Repository):
         with self.db.read_session() as s:
             result = s.query(self.model).filter(PriceAnalysis.coin_id == coin_id).all()
             return [row for row in result][0]
+        
+    def get_latest_for_coin(self, coin_id: int) -> PriceAnalysis:
+        return self.db.session.query(PriceAnalysis).filter_by(
+            coin_id=coin_id
+        ).order_by(PriceAnalysis.time.desc()).first()
