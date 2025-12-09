@@ -5,7 +5,7 @@ from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.repositories import CoinRepository, AnalysisRepository
-from traitor.core.services.analysis_service import AnalysisService
+from traitor.core.services.news_analysis_service import AnalysisService
 from traitor.core.tools.ai import LLMGemini
 from traitor.core.config import container
 
@@ -21,7 +21,7 @@ class AnalysisAgent(AgentBase):
         
         self.service = AnalysisService(self.analysis_repo, LLMGemini(), container.prompts())
         
-        logging.info(f"Init AnalysisAgent")
+        logging.info(f"Init NewsAnalysisAgent")
 
     def _do_task(self):
         logging.info("Running market analysis...")
