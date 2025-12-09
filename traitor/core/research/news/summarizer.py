@@ -15,7 +15,7 @@ class NewsSummarAIzer(object):
 
     def summarize_article(self, article: Article) -> str:
         return self.model.process_text([
-            open(self.prompts._crypto_hft_json, "r").read(),
+            open(self.prompts.summarize_news, "r").read(),
             f"Current Date: {datetime.date.today()}",
             str(article)
         ])
