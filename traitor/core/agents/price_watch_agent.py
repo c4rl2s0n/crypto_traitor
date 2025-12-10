@@ -15,7 +15,7 @@ class PriceWatchAgent(AgentBase):
     interval = timedelta(minutes=5)
 
     @inject
-    def __init__(self, crypto_info_api: CryptoInfoApi, interval:relativedelta = Provide["config.intervals.PRICE_WATCH"]):
+    def __init__(self, crypto_info_api: CryptoInfoApi = Provide["crypto_info_api"], interval:relativedelta = Provide["config.intervals.PRICE_WATCH"]):
         self.interval = interval
         self.coin_repo = CoinRepository()
         self.coins = self.coin_repo.get_active()
