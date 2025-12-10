@@ -88,14 +88,11 @@ def run():
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
     ]
     agents: list[AgentBase] = [
-        #TradingAgent(),
-        # PriceWatchAgent(CoinGecko()),
-        # NewsResearchAgent([
-        #     CoinDesk(),
-        #     CryptoSlate(),
-        # ]),
+        TradingAgent(),
+        PriceWatchAgent(),
+        NewsResearchAgent(),
         PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        # NewsAnalysisAgent(),
+        NewsAnalysisAgent(),
     ]
     agents.extend(price_feature_extraction_agents)
     # agents: list[AgentBase] = [TradingAgent()]

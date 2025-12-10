@@ -54,13 +54,13 @@ class PriceFeatureExtractionAgent(AgentBase):
 
             # get the prices in the interval
             prices = self.price_repo.get_prices_df(self.coin_ids, start=start)
+            prices = prices.sort_values(["coin_id", "time"]).reset_index(drop=True)
 
             # extract features for the prices
             statistical_features = extract_price_features(prices, interval=self.feature_interval)
             for coin_id in statistical_features.keys():
                 feature = statistical_features[coin_id]
                 c_prices_df = prices[prices["coin_id"] == coin_id]
-                c_prices_df.sort_values("time")
                 c_prices_np = c_prices_df["value"].to_numpy()
                 c_volume_np = c_prices_df["trading_vol_24h"].to_numpy()
                 prices_short, prices_long = self._df_windows(c_prices_df)

@@ -1,7 +1,27 @@
 import logging
 import sys
 
-log_format = "{\"time\": \"%(asctime)s\", \"thread\": \"%(threadName)s\" \"level\": \"%(levelname)s\", \"message\": \"%(message)s\"}"
+
+import logging
+import json
+import traceback
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "level": record.levelname,
+            "time": self.formatTime(record, self.datefmt),
+            "message": record.getMessage(),
+        }
+        # include exception info if available
+        if record.exc_info:
+            log_record["exception_type"] = str(record.exc_info[0].__name__)
+            log_record["exception_message"] = str(record.exc_info[1])
+            log_record["stack_trace"] = "".join(traceback.format_exception(*record.exc_info))
+        return json.dumps(log_record)
+
+
+log_format = "[%(asctime)s] (%(threadName)s) <%(levelname)s>: %(message)s"
 
 
 def setup():
@@ -24,7 +44,7 @@ def setup():
     file_handler = logging.FileHandler("log.jsonl")
     file_handler.setLevel(logging.WARNING)  # logs WARNING, ERROR, CRITICAL
     file_formatter = logging.Formatter(log_format)
-    file_handler.setFormatter(file_formatter)
+    file_handler.setFormatter(JsonFormatter())
 
     # Add handlers to logger
     logger.addHandler(stdout_handler)
