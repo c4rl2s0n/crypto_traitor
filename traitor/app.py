@@ -11,18 +11,19 @@ from traitor.core.agents.agent_base import stop_event
 from traitor.core.agents.price_analysis_agent import PriceAnalysisAgent
 from traitor.core.config import container, logs
 from traitor.core.data.models import PriceFeatureInterval
-from traitor.core.data.repositories import PriceFeatureRepository
-from traitor.core.research.market.apis import CoinGecko
-from traitor.core.research.market.apis.stealthexchange import StealthexApi
-from traitor.core.research.news.sources import CoinDesk
-from traitor.core.research.news.sources.cryptoslate import CryptoSlate
-from traitor.core.services import CoinService
+from traitor.core.data.repositories import PriceFeatureRepository, ArticleRepository
+from traitor.core.research.news import NewsSummarAIzer
+from traitor.core.services import CoinService, NewsResearchService
 
 
+# TODO: Setup:
+#  - Load articles (if empty, or if some are missing a summary)
+#  - Generate first news_summaries
+#  -> Make sure LLM can start trading when all the agents are started
 def setup():
     # delete all stored features to enforce re-analysis and avoid usage of outdated features
     price_feature_repo = PriceFeatureRepository()
-    price_feature_repo.clear()
+    #price_feature_repo.clear()
 
     # scan for coins
     coin_service = CoinService()
@@ -38,6 +39,17 @@ def setup():
             coin_service.activate_coin(c)
     for coin in coins:
         coin_service.load_price_history(coin)
+
+    # make sure some articles are loaded before starting the bot
+    article_repo = ArticleRepository()
+    research_service = NewsResearchService(summarizer=NewsSummarAIzer())
+    if article_repo.empty():
+        # lookup news, if no articles are available
+        research_service.research_news(container.news_sources())
+    else:
+        # otherwise, make sure all articles are summarized
+        research_service.inspect_articles()
+
 
 
 def run():
@@ -76,14 +88,14 @@ def run():
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
     ]
     agents: list[AgentBase] = [
-        TradingAgent(),
-        PriceWatchAgent(CoinGecko()),
-        NewsResearchAgent([
-            CoinDesk(),
-            CryptoSlate(),
-        ]),
+        #TradingAgent(),
+        # PriceWatchAgent(CoinGecko()),
+        # NewsResearchAgent([
+        #     CoinDesk(),
+        #     CryptoSlate(),
+        # ]),
         PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        NewsAnalysisAgent(),
+        # NewsAnalysisAgent(),
     ]
     agents.extend(price_feature_extraction_agents)
     # agents: list[AgentBase] = [TradingAgent()]

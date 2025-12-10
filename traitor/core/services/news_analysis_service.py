@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 
 from traitor.core.config.config import PROMPTS
-from traitor.core.data.models import Coin, CoinNewsSummary
+from traitor.core.data.models import Coin, CoinNewsSummary, SummaryTimeframe
 from traitor.core.data.repositories import NewsAnalysisRepository
 from traitor.core.tools import LLMAgent
 
@@ -14,8 +14,8 @@ class NewsAnalysisService:
         self.llm = llm
         self.prompts = prompts
 
-    def analyze_coin(self, coin: Coin, timeframe_name: str, days_back: int):
-        logging.info(f"Analyzing {coin.name} over last {timeframe_name}...")
+    def analyze_coin(self, coin: Coin, timeframe: SummaryTimeframe, days_back: int):
+        logging.info(f"Analyzing {coin.name} over last {timeframe}...")
         
         start_date = datetime.now() - timedelta(days=days_back)
         
@@ -48,7 +48,7 @@ class NewsAnalysisService:
                 continue
 
         if not relevant_data:
-            logging.info(f"No relevant news found for {coin.name} in {timeframe_name}")
+            logging.info(f"No relevant news found for {coin.name} in {timeframe}")
             return
 
         avg_sentiment = total_sentiment / count if count > 0 else 0
@@ -62,7 +62,7 @@ class NewsAnalysisService:
 
         prompt = template.format(
             coin_name=coin.name,
-            timeframe=timeframe_name,
+            timeframe=timeframe,
             score=f"{avg_sentiment:.2f}", 
             data_text="\n".join(relevant_data)
         )
@@ -71,7 +71,7 @@ class NewsAnalysisService:
 
         summary_obj = CoinNewsSummary(
             coin_id=coin.id,
-            timeframe=timeframe_name,
+            timeframe=timeframe,
             sentiment_score=avg_sentiment,
             content=meta_summary_text
         )

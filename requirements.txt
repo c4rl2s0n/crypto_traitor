@@ -1,3 +1,5 @@
+scikit-learn
+numpy
 python-dateutil
 bs4~=0.0.2
 dependency-injector

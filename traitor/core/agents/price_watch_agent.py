@@ -20,7 +20,7 @@ class PriceWatchAgent(AgentBase):
         self.coin_repo = CoinRepository()
         self.coins = self.coin_repo.get_active()
         self.coin_service = CoinService(crypto_info_api=crypto_info_api)
-        logging.info(f"Init Agent {self.name}.\n\tAPI: {crypto_info_api.name}\n\tActive coins: {self.coins}")
+        logging.info(f"Init Agent {self.name}.\n\tAPI: {crypto_info_api.name}\n\tActive coins: {[c.name for c in self.coins]}")
 
     def _do_task(self):
         # TODO: check if active coins have changed! This should be handled through an event to avoid unnecessary polling

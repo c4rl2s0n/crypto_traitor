@@ -4,7 +4,8 @@ from typing import List, Union
 
 from dependency_injector.wiring import inject, Provide
 from openai import OpenAI
-from openai.types.responses import ResponseInputParam
+from openai.types.responses import ResponseInputParam, EasyInputMessage, EasyInputMessageParam
+from openai.types.responses.response_input_param import FunctionCallOutput
 
 from traitor.core.tools.ai.llm_agent import LLMAgent
 from traitor.core.tools.ai.llm_tools import LLMTool
@@ -30,11 +31,15 @@ class LLMOpenAI(LLMAgent):
     def process_tooled(self, contents: List[str], tools: list[LLMTool] = None) -> str:
         # prepare tools
         prepared_tools = self._prepare_tools(tools)
-        llm_contents = [
-            {"role": "user", "content": self._prepare_contents(contents)}
-        ]
+        system_prompt: EasyInputMessageParam = {
+                "role": "system",
+                "content": self._prepare_contents(contents),
+                "type": "message"
+            }
 
-        openai_tools = list(prepared_tools.values())
+        llm_contents: ResponseInputParam = [system_prompt]
+
+        openai_tools = [t["openai"] for t in prepared_tools.values()]
 
         responses = []
         while True:
@@ -54,18 +59,18 @@ class LLMOpenAI(LLMAgent):
                 if output.type == "tool_calls":
                     has_tool = True
                     responses.append(f"Function Call: {output.name}({output.arguments})")
-                    function_result = openai_tools[output.name](json.loads(output.arguments))
+                    function_result = prepared_tools[output.name]["function"](json.loads(output.arguments))
 
-                    llm_contents.append({
+                    function_call_output: FunctionCallOutput = {
                         "type": "function_call_output",
                         "call_id": output.call_id,
                         "output": json.dumps({
                             output.name: function_result
                         })
-                    })
+                    }
+                    llm_contents.append(function_call_output)
                 else:
-                    logging.debug(f"Non-tool output: {output.text}")
-                    responses.append(output.text)
+                    responses.append(output)
 
             if not has_tool:
                 break
@@ -83,8 +88,11 @@ class LLMOpenAI(LLMAgent):
         for tool in tools:
             prepared_tools[tool.name] = {
                 "function": tool.execute,
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.parameters,
+                "openai": {
+                    "type": "function",
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.parameters,
+                }
             }
         return prepared_tools

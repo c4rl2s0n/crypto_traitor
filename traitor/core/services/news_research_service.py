@@ -13,7 +13,7 @@ class NewsResearchService(object):
 
     def research_news(self, sources: list[NewsSource]):
         self._gather_articles(sources)
-        self._inspect_articles()
+        self.inspect_articles()
 
     def _gather_articles(self, sources: list[NewsSource]):
         """
@@ -44,7 +44,7 @@ class NewsResearchService(object):
                         continue
                 self.article_repository.add_all(articles)
 
-    def _inspect_articles(self):
+    def inspect_articles(self):
         """
         Summarize all the new articles with visual progress
         :return:

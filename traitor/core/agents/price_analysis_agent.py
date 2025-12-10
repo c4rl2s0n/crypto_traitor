@@ -6,12 +6,32 @@ from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.models import PriceFeatureInterval, Coin, PriceFeature, PriceAnalysis
-from traitor.core.data.repositories import CoinRepository, PriceFeatureRepository, PriceAnalysisRepository
+from traitor.core.data.repositories import CoinRepository, PriceFeatureRepository, PriceAnalysisRepository, \
+    PricesRepository
 from traitor.core.tools import LLMAgent, dict_to_json
 
 
 def _features_to_json(features: dict[PriceFeatureInterval, PriceFeature]) -> str:
-    json_dict = {k.name: v.to_dict() for k, v in features.items()}
+    # json_dict = {k.name: v.to_dict() for k, v in features.items()}
+    json_dict = {}
+
+    # skip intervals where the timeframe is double (e.g. ALL_TIME and YEAR)
+    checked = []
+    for i1 in PriceFeatureInterval:
+        if i1 not in features.keys():
+            continue
+        double = False
+        for i2 in PriceFeatureInterval:
+            if i2 in checked or i2 not in features.keys() or i1 == i2:
+                continue
+            if (features[i1].start == features[i2].start
+                    and features[i1].end == features[i2].end):
+                double = True
+                break
+        checked.append(i1)
+        if double:
+            continue
+        json_dict[i1.value[0]] = features[i1].to_dict()
     return dict_to_json(json_dict)
 
 
@@ -26,10 +46,11 @@ class PriceAnalysisAgent(AgentBase):
         self.model = model
 
         self.coin_repo = CoinRepository()
+        self.price_repo = PricesRepository()
         self.price_analysis_repo = PriceAnalysisRepository()
         self.price_feature_repo = PriceFeatureRepository()
         self.coins = self.coin_repo.get_active()
-        logging.info(f"Init Agent {self.name}.\n\tActive coins: {self.coins}")
+        logging.info(f"Init Agent {self.name}.\n\tActive coins: {[c.name for c in self.coins]}")
 
 
     def _do_task(self):
@@ -42,7 +63,7 @@ class PriceAnalysisAgent(AgentBase):
                     logging.debug(f"No features available for coin {coin.name}. Skipping analysis.")
                     continue
                 prompt = self._prepare_prompt(coin, coin_features)
-                response = self.model.ask_for_json([prompt])
+                response = self.model.process_text([prompt])
                 analysis = PriceAnalysis(
                     coin_id=coin.id,
                     time=datetime.now(),
@@ -57,5 +78,9 @@ class PriceAnalysisAgent(AgentBase):
         template = open(self.prompts.summarize_prices, "r").read()
         template += f"Asset: {coin.name}\n\n"
         template += f"Price Features:\n{_features_to_json(features)}\n"
+        prices_1h = self.price_repo.get_prices_dict([coin.id], start=datetime.now() - timedelta(hours=1))
+        template += "Market values in the last hour:\n"
+        for price in prices_1h:
+            template += f"- {price["time"].strftime("%Y-%m-%d %H:%M")}: {price["value"]}\n"
 
         return template

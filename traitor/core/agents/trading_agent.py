@@ -131,7 +131,7 @@ class TradingAgent(AgentBase):
         prompt = template.format(
             coin_name=coin.name,
             coin_symbol=coin.symbol,
-            coin_price=latest_price,
+            coin_price=latest_price.value,
             coin_balance=self.paper_run.wallet.portfolio[coin.id],
             sentiment_score=news_summary.sentiment_score,
             news_summary=news_summary.content,

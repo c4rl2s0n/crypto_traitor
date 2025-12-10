@@ -6,7 +6,6 @@ class PROMPTS:
     _crypto_analyst_tags = "traitor/core/assets/prompts/prompt_crypto_analyst_tags.md"
     _crypto_hft_json = "traitor/core/assets/prompts/prompt_crypto_hft_json.md"
 
-    _price_analysis_old = "traitor/core/assets/prompts/price_analysis_old.md"
     _price_analysis = "traitor/core/assets/prompts/price_analysis.md"
     _news_analysis = "traitor/core/assets/prompts/news_analysis.md"
     _trading_strategy = "traitor/core/assets/prompts/trading_strategy.md"

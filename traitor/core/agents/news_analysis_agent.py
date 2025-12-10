@@ -4,6 +4,7 @@ from datetime import timedelta
 from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
+from traitor.core.data.models import SummaryTimeframe
 from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository
 from traitor.core.services.news_analysis_service import NewsAnalysisService
 from traitor.core.tools.ai import LLMGemini
@@ -34,7 +35,7 @@ class NewsAnalysisAgent(AgentBase):
                 #self.service.analyze_coin(coin, "24h", days_back=1)
                 
                 # 2. Weekly analysis (7d) - Optional, consumes more tokens
-                self.service.analyze_coin(coin, "7d", days_back=7)
+                self.service.analyze_coin(coin, SummaryTimeframe.WEEK, days_back=7)
 
                 # 3. Monthly analysis (30d) - Optional, consumes more tokens
                 #self.service.analyze_coin(coin, "30d", days_back=30)

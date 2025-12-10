@@ -4,15 +4,19 @@ from traitor.core.config.config import *
 from traitor.core.data.db import Database
 from traitor.core.research.market.apis import CoinGecko
 from traitor.core.research.market.apis.stealthexchange import StealthexApi
+from traitor.core.research.news import NewsSource
+from traitor.core.research.news.sources import CoinDesk, CryptoSlate
 from traitor.core.tools.ai import LLMOpenAI
-from traitor.core.tools.ai.agents.llm_gemini import LLMGemini
 
+def news_source_factory() -> list[NewsSource]:
+    return [CoinDesk(), CryptoSlate()]
 
 class Container(containers.DynamicContainer):
     config = providers.Configuration()
     prompts = providers.ThreadSafeSingleton(PROMPTS)
-    crypto_info_api = providers.Factory(CoinGecko)
-    crypto_exchange_api = providers.Factory(StealthexApi)
+    news_sources = providers.Factory(news_source_factory)
+    crypto_info_api = providers.Factory(CoinGecko, api_key=config.api_keys.COINGECKO)
+    crypto_exchange_api = providers.Factory(StealthexApi, api_key=config.api_keys.STEALTHEX)
     summarize_agent_news = providers.Factory(LLMOpenAI, model='gpt-5-nano')
     summarize_agent_prices = providers.Factory(LLMOpenAI, model='gpt-5-nano')
     summarize_agent_market = providers.Factory(LLMOpenAI, model='gpt-5-nano')
@@ -26,6 +30,7 @@ class Container(containers.DynamicContainer):
         self.load_config()
         super().__init__()
         self.db = providers.Resource(Database, path=self.config.db.CONNECTION)
+
 
     def load_config(self):
         from dotenv import load_dotenv

@@ -16,6 +16,7 @@ Synthesize both reports. Look for confluence (both agree) or divergence (news sa
 - If News is very bullish but Price is overbought, be cautious.
 - If News is neutral but Price shows a breakout, follow the price.
 - If both are aligned, High Confidence.
+- You can only use the assets listed above!
 
 ---
 OUTPUT:
