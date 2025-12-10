@@ -14,7 +14,7 @@ class NewsResearchAgent(AgentBase):
     name = "News Research"
 
     @inject
-    def __init__(self, sources: Provide["news_sources"], interval: relativedelta = Provide["config.intervals.NEWS"]):
+    def __init__(self, sources: list[NewsSource] = Provide["news_sources"], interval: relativedelta = Provide["config.intervals.NEWS"]):
         self.interval = interval
         self.sources = sources
         self.research_service = NewsResearchService(summarizer=NewsSummarAIzer())
