@@ -5,14 +5,14 @@ from .price_feature_repository import PriceFeatureRepository
 from .prices_repository import PricesRepository
 from .trading_strategy_repository import TradingStrategyRepository
 from .repository import Repository
-from .news_analysis_repository import AnalysisRepository
+from .news_analysis_repository import NewsAnalysisRepository
 
 __all__ = [
     "ArticleRepository",
     "CoinRepository",
     "PriceAnalysisRepository", "PriceFeatureRepository", "PricesRepository",
     "TradingStrategyRepository",
-    "AnalysisRepository",
+    "NewsAnalysisRepository",
     # Base
     "Repository"
 ]

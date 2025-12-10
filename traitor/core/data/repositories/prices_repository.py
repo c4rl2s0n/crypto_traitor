@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 from dependency_injector.wiring import inject, Provide
 
-from sqlalchemy import text
+from sqlalchemy import text, desc
 
 from traitor.core.config import DBViews
 from traitor.core.data.db import Database
@@ -15,7 +15,7 @@ class PricesRepository(Repository):
     def __init__(self):
         super().__init__(model=Price)
 
-    def get_last_price_date(self, coin_id: str) -> datetime | None:
+    def get_last_price_date(self, coin_id: int) -> datetime | None:
         """
         returns the timestamp of the last stored price for a coin. None if no price exists for the given coin
         :param coin_id:
@@ -31,6 +31,15 @@ class PricesRepository(Repository):
             if row:
                 return row[0]  # first column
             return None
+
+    def get_last_price(self, coin_id: int) -> Price | None:
+        """
+        returns the timestamp of the last stored price for a coin. None if no price exists for the given coin
+        :param coin_id:
+        :return:
+        """
+        with self.db.read_session() as s:
+            return s.query(Price).filter(Price.coin_id == coin_id).order_by(desc(Price.time)).limit(1).first()
 
     def add_prices(self, prices: list[Price]):
         if len(prices) == 0:

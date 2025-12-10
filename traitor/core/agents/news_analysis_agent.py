@@ -4,22 +4,22 @@ from datetime import timedelta
 from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
-from traitor.core.data.repositories import CoinRepository, AnalysisRepository
-from traitor.core.services.news_analysis_service import AnalysisService
+from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository
+from traitor.core.services.news_analysis_service import NewsAnalysisService
 from traitor.core.tools.ai import LLMGemini
 from traitor.core.config import container
 
-class AnalysisAgent(AgentBase):
-    name = "Market Analyst"
+class NewsAnalysisAgent(AgentBase):
+    name = "News Analysis"
     interval = timedelta(hours=1) 
 
     @inject
-    def __init__(self, interval = Provide["config.intervals.ANALYSIS"]):
+    def __init__(self, interval = Provide["config.intervals.ANALYSIS"], model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):
         self.interval = interval
         self.coin_repo = CoinRepository()
-        self.analysis_repo = AnalysisRepository()
+        self.analysis_repo = NewsAnalysisRepository()
         
-        self.service = AnalysisService(self.analysis_repo, LLMGemini(), container.prompts())
+        self.service = NewsAnalysisService(self.analysis_repo, model, prompts)
         
         logging.info(f"Init NewsAnalysisAgent")
 

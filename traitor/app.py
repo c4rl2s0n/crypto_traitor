@@ -13,6 +13,7 @@ from traitor.core.config import container, logs
 from traitor.core.data.models import PriceFeatureInterval
 from traitor.core.data.repositories import PriceFeatureRepository
 from traitor.core.research.market.apis import CoinGecko
+from traitor.core.research.market.apis.stealthexchange import StealthexApi
 from traitor.core.research.news.sources import CoinDesk
 from traitor.core.research.news.sources.cryptoslate import CryptoSlate
 from traitor.core.services import CoinService
@@ -24,7 +25,7 @@ def setup():
     price_feature_repo.clear()
 
     # scan for coins
-    coin_service = CoinService(CoinGecko())
+    coin_service = CoinService()
 
     # populate database with available coins
     if not coin_service.coins_loaded():
@@ -65,13 +66,7 @@ def run():
     # set up the bot
     setup()
 
-    agents: list[AgentBase] = [
-        NewsResearchAgent([
-            CoinDesk(),
-            CryptoSlate(),
-        ]),
-        TradingAgent(),
-        PriceWatchAgent(CoinGecko()),
+    price_feature_extraction_agents = [
         PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
         PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.QUARTER, interval=relativedelta(days=1)),
@@ -79,9 +74,20 @@ def run():
         PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
         PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
         # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        AnalysisAgent(),
     ]
+    agents: list[AgentBase] = [
+        TradingAgent(),
+        PriceWatchAgent(CoinGecko()),
+        NewsResearchAgent([
+            CoinDesk(),
+            CryptoSlate(),
+        ]),
+        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
+        NewsAnalysisAgent(),
+    ]
+    agents.extend(price_feature_extraction_agents)
+    # agents: list[AgentBase] = [TradingAgent()]
+
     # Create threads
     threads = [
         threading.Thread(target=agent.run,  name=agent.name) for agent in agents

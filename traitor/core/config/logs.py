@@ -1,7 +1,7 @@
 import logging
 import sys
 
-log_format = "%(asctime)s [%(threadName)s] %(levelname)s: %(message)s"
+log_format = "{\"time\": \"%(asctime)s\", \"thread\": \"%(threadName)s\" \"level\": \"%(levelname)s\", \"message\": \"%(message)s\"}"
 
 
 def setup():
@@ -21,7 +21,7 @@ def setup():
     stdout_handler.setFormatter(stdout_formatter)
 
     # FileHandler for file (e.g., WARNING and above)
-    file_handler = logging.FileHandler("app.log")
+    file_handler = logging.FileHandler("log.jsonl")
     file_handler.setLevel(logging.WARNING)  # logs WARNING, ERROR, CRITICAL
     file_formatter = logging.Formatter(log_format)
     file_handler.setFormatter(file_formatter)

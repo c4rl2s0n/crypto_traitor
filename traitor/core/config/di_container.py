@@ -2,6 +2,8 @@ from dependency_injector import containers, providers
 
 from traitor.core.config.config import *
 from traitor.core.data.db import Database
+from traitor.core.research.market.apis import CoinGecko
+from traitor.core.research.market.apis.stealthexchange import StealthexApi
 from traitor.core.tools.ai import LLMOpenAI
 from traitor.core.tools.ai.agents.llm_gemini import LLMGemini
 
@@ -9,8 +11,13 @@ from traitor.core.tools.ai.agents.llm_gemini import LLMGemini
 class Container(containers.DynamicContainer):
     config = providers.Configuration()
     prompts = providers.ThreadSafeSingleton(PROMPTS)
+    crypto_info_api = providers.Factory(CoinGecko)
+    crypto_exchange_api = providers.Factory(StealthexApi)
     summarize_agent_news = providers.Factory(LLMOpenAI, model='gpt-5-nano')
     summarize_agent_prices = providers.Factory(LLMOpenAI, model='gpt-5-nano')
+    summarize_agent_market = providers.Factory(LLMOpenAI, model='gpt-5-nano')
+    trading_agent = providers.Factory(LLMOpenAI, model='gpt-5-mini')
+    # trading_agent = providers.Factory(LLMGemini, model='gemini-2.5-flash')
     # summarize_agent_news = providers.Factory(LLMGemini, model='gemini-2.5-flash-lite')
     # summarize_agent_prices = providers.Factory(LLMGemini, model='gemini-2.5-flash')
 
@@ -29,6 +36,7 @@ class Container(containers.DynamicContainer):
         self.config.api_keys.GEMINI.from_env("API_KEY_GEMINI")
         self.config.api_keys.FREECRYPTO.from_env("API_KEY_FREECRYPTO")
         self.config.api_keys.COINGECKO.from_env("API_KEY_COINGECKO")
+        self.config.api_keys.STEALTHEX.from_env("API_KEY_STEALTHEX")
 
         # DB
         self.config.db.URL.from_env("DB_URL")
@@ -78,3 +86,4 @@ def bootstrap():
     # configure gemini api
     import google.generativeai as genai
     genai.configure(api_key=container.config.api_keys.GEMINI())
+

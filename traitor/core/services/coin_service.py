@@ -1,12 +1,16 @@
+from dependency_injector.wiring import inject, Provide
+
 from traitor.core.data.models import Coin, Price
 from traitor.core.data.repositories import CoinRepository, PricesRepository
-from traitor.core.research.market import CryptoApi
-from traitor.core.research.market.apis.coingecko import CoinGecko
+from traitor.core.research.market import CryptoInfoApi
+from traitor.core.research.market.exchange_api import CryptoExchangeApi
 
 
 class CoinService(object):
-    def __init__(self, crypto_api: CryptoApi):
-        self.crypto_api = crypto_api
+    @inject
+    def __init__(self, crypto_info_api: CryptoInfoApi = Provide["crypto_info_api"], crypto_exchange_api: CryptoExchangeApi = Provide["crypto_exchange_api"]):
+        self.crypto_info_api = crypto_info_api
+        self.crypto_exchange_api = crypto_exchange_api
         self.coin_repo = CoinRepository()
         self.price_repo = PricesRepository()
 
@@ -18,9 +22,12 @@ class CoinService(object):
             return self.coin_repo.get_all()
 
         # get list of available coins
-        coin_gecko = CoinGecko()
-        coins = coin_gecko.get_coins()
+        coins = self.crypto_info_api.get_coins()
         self.coin_repo.add_all(coins)
+
+        # get the coins that can be exchanged (TODO: actually only these coins are able to become active... Maybe add field 'can trade')
+        self.crypto_exchange_api.get_coins()
+
         return coins
 
     def get_active_coins(self) -> list[Coin]:
@@ -38,16 +45,16 @@ class CoinService(object):
     def initialize_coin(self, coin: Coin) -> Coin:
         # initialize information about the coin
         if not coin.initialized:
-            self.crypto_api.update_coin_info(coin)
-
-        # commit changes to database
-        self.coin_repo.update(coin)
+            coin, urls = self.crypto_info_api.update_coin_info(coin)
+            # commit changes to database
+            self.coin_repo.update(coin)
+            self.coin_repo.update_urls(urls)
         return coin
 
     def load_price_history(self, coin: Coin) -> Coin:
         # update prices of the coin
         last_price_date = self.price_repo.get_last_price_date(coin.id)
-        prices = self.crypto_api.get_coin_historical_prices(coin, t_from=last_price_date)
+        prices = self.crypto_info_api.get_coin_historical_prices(coin, t_from=last_price_date)
         self.price_repo.add_prices(prices)
 
         self.coin_repo.update(coin)
@@ -55,7 +62,7 @@ class CoinService(object):
 
     def get_current_prices(self, coins: list[Coin]) -> list[Price]:
         # load the current prices for the given coins
-        prices = self.crypto_api.get_current_prices(coins)
+        prices = self.crypto_info_api.get_current_prices(coins)
 
         # update the database
         self.price_repo.add_prices(prices)

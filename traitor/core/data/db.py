@@ -56,7 +56,6 @@ class Database(object):
             session.close()
 
     def _prepare_database(self):
-        # important for SQLAlchemy to correctly register the models!
         ApiCoinID.setup_indices()
 
         # setup database schema

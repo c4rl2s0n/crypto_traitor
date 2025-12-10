@@ -2,16 +2,14 @@ from datetime import datetime
 from typing import List
 from dependency_injector.wiring import inject, Provide
 from traitor.core.data.db import Database
-from traitor.core.data.models import Article, CoinSummary
+from traitor.core.data.models import Article, CoinNewsSummary, SummaryTimeframe
+from traitor.core.data.repositories import Repository
 
-class AnalysisRepository:
-    @inject
-    def __init__(self, db: Database = Provide["db"]):
-        self.db = db
 
-    def add(self, summary: CoinSummary):
-        self.db.session.add(summary)
-        self.db.session.commit()
+class NewsAnalysisRepository(Repository):
+    
+    def __init__(self):
+        super().__init__(model=CoinNewsSummary)
 
     def get_articles_in_range(self, start_date: datetime) -> List[Article]:
         return self.db.session.query(Article).filter(
@@ -20,8 +18,8 @@ class AnalysisRepository:
             Article.summary != ""
         ).all()
     
-    def get_latest_for_coin(self, coin_id: int, timeframe: str = "7d") -> CoinSummary:
-        return self.db.session.query(CoinSummary).filter_by(
+    def get_latest_for_coin(self, coin_id: int, timeframe: SummaryTimeframe = SummaryTimeframe.WEEK) -> CoinNewsSummary:
+        return self.db.session.query(CoinNewsSummary).filter_by(
             coin_id=coin_id, 
             timeframe=timeframe
-        ).order_by(CoinSummary.date_generated.desc()).first()
+        ).order_by(CoinNewsSummary.date_generated.desc()).first()

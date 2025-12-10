@@ -1,4 +1,0 @@
-
-
-class MarketResearchService(object):
-    pass

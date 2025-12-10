@@ -9,7 +9,6 @@ from traitor.core.data.models import ApiCoinID
 class Coin(Base):
     __tablename__ = 'coins'
 
-    # id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     id = Column(Integer, primary_key=True, autoincrement=True)
     symbol = Column(String)
     name = Column(String)
@@ -22,7 +21,10 @@ class Coin(Base):
 
     active = Column(Boolean, default=False)
     apis = relationship("ApiCoinID")
-    urls = relationship("CoinUrl")
+    # urls = relationship("CoinUrl")
+    # price_analyses = relationship("PriceAnalysis")
+    # price_features = relationship("PriceFeature")
+    # news_summaries = relationship("CoinNewsSummary")
 
     def get_api(self, name: str) -> ApiCoinID | None:
         for api in self.apis:

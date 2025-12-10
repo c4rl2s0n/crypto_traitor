@@ -1,3 +1,4 @@
+import enum
 import threading
 import time
 from abc import ABC, abstractmethod
@@ -6,13 +7,15 @@ from datetime import datetime, timedelta
 import requests
 from requests import Response
 
-from traitor.core.data.models import Price, Coin, ApiCoinID, CoinUrl
+from traitor.core.data.models import Coin, ApiCoinID, CoinApiType
 from traitor.core.research.market.exceptions import ApiNotSupportedException
 
 
-class CryptoApi(ABC):
+
+class CryptoApiBase(ABC):
     name: str
     currency = "usd"
+    api_type: CoinApiType
 
     # ratelimit counter
     _lock = threading.Lock()
@@ -42,14 +45,20 @@ class CryptoApi(ABC):
         pass
 
     def _request(self, api: str) -> Response:
-        # check ratelimit and wait for the delay to continue requesting the api
-        delay = self._check_ratelimit()
-        if delay.total_seconds() > 0:
-            time.sleep(delay.total_seconds())
+        self._respect_ratelimit()
 
-        headers = self._get_request_headers()
+        headers = self._get_request_headers(api)
         self._count_request()
         response = requests.get(self._get_request_url(api), headers=headers, timeout=10)
+        self._check_response_code(response)
+        return response
+
+    def _request_post(self, api: str, data: str | dict) -> Response:
+        self._respect_ratelimit()
+
+        headers = self._get_request_headers(api)
+        self._count_request()
+        response = requests.post(self._get_request_url(api), data=data, headers=headers, timeout=10)
         self._check_response_code(response)
         return response
 
@@ -112,42 +121,17 @@ class CryptoApi(ABC):
             # wait for the minute of the
             return now - (history[0] + timedelta(minutes=1, seconds=1))
 
+    @classmethod
+    def _respect_ratelimit(cls):
+        # check ratelimit and wait for the delay to continue requesting the api
+        delay = cls._check_ratelimit()
+        if delay.total_seconds() > 0:
+            time.sleep(delay.total_seconds())
+
     @abstractmethod
     def get_coins(self) -> list[Coin]:
         """
         get a list of all coins that are supported by the API
         :return:
-        """
-        pass
-
-    @abstractmethod
-    def get_current_prices(self, coins: list[Coin]) -> list[Price]:
-        """
-        Get the current price for a list of coins
-        :return:
-        """
-        pass
-
-    @abstractmethod
-    def get_coin_historical_prices(self,
-                                   coin: Coin,
-                                   t_from: datetime = None,
-                                   t_to: datetime = None
-                                   ) -> list[Price]:
-        """
-        Get the historical prices for a given coin
-        :param coin:
-        :param t_from: Timestamp from when to start getting prices. If None -> Today - 365
-        :param t_to:  Timestamp to when to get the prices. If None -> Today
-        :return:
-        """
-        pass
-
-    @abstractmethod
-    def update_coin_info(self, coin: Coin) -> Coin:
-        """
-        update generic information of a coin
-        :param coin:
-        :return: updated Coin
         """
         pass

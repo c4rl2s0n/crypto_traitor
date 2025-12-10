@@ -1,17 +1,24 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, Text
+import enum
+
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, Float, Text, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from traitor.core.data import Base
 
-class CoinSummary(Base):
-    __tablename__ = 'coin_summaries'
+class SummaryTimeframe(enum.Enum):
+    DAY = "24h"
+    WEEK = "7d"
+    MONTH = "30d"
+
+class CoinNewsSummary(Base):
+    __tablename__ = 'coin_news_summaries'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    coin_id = Column(Integer, ForeignKey('coins.id'), nullable=False)
+    coin_id = Column(Integer, ForeignKey('coins.id', ondelete="CASCADE"), nullable=False)
     
     # '24h', '7d', '30d'
-    timeframe = Column(String, nullable=False) 
+    timeframe = Column(Enum(SummaryTimeframe))
     
     # Mathematical average of the sentiment of the analyzed articles
     sentiment_score = Column(Float, nullable=True) 
@@ -21,8 +28,6 @@ class CoinSummary(Base):
     
     date_generated = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
-    coin = relationship("Coin", backref="summaries")
 
     def __repr__(self):
         return f"<CoinSummary(coin={self.coin_id}, frame={self.timeframe}, score={self.sentiment_score})>"

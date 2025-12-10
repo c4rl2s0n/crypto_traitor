@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from traitor.core.tools.misc import dict_to_json
 
 
+
+
 class LLMTool(ABC):
     name: str
     description: str

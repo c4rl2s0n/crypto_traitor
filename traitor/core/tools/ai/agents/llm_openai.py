@@ -53,6 +53,7 @@ class LLMOpenAI(LLMAgent):
             for output in response.output:
                 if output.type == "tool_calls":
                     has_tool = True
+                    responses.append(f"Function Call: {output.name}({output.arguments})")
                     function_result = openai_tools[output.name](json.loads(output.arguments))
 
                     llm_contents.append({

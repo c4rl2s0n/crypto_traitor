@@ -4,12 +4,12 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 
 from traitor.core.config.config import PROMPTS
-from traitor.core.data.models import Coin, CoinSummary
-from traitor.core.data.repositories import AnalysisRepository
+from traitor.core.data.models import Coin, CoinNewsSummary
+from traitor.core.data.repositories import NewsAnalysisRepository
 from traitor.core.tools import LLMAgent
 
-class AnalysisService:
-    def __init__(self, repository: AnalysisRepository, llm: LLMAgent, prompts: PROMPTS):
+class NewsAnalysisService:
+    def __init__(self, repository: NewsAnalysisRepository, llm: LLMAgent, prompts: PROMPTS):
         self.repository = repository
         self.llm = llm
         self.prompts = prompts
@@ -69,7 +69,7 @@ class AnalysisService:
         
         meta_summary_text = self.llm.process_text([prompt])
 
-        summary_obj = CoinSummary(
+        summary_obj = CoinNewsSummary(
             coin_id=coin.id,
             timeframe=timeframe_name,
             sentiment_score=avg_sentiment,

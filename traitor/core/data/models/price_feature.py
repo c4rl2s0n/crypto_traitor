@@ -1,6 +1,7 @@
 import enum
 
-from sqlalchemy import Column, Float, Integer, DateTime, Enum, String
+from sqlalchemy import Column, Float, Integer, DateTime, Enum, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 from traitor.core.data import Base
 
@@ -15,7 +16,7 @@ class PriceFeatureInterval(enum.Enum):
 
 class PriceFeature(Base):
     __tablename__ = "price_features"
-    coin_id = Column(Integer, primary_key=True)
+    coin_id = Column(Integer, ForeignKey('coins.id', ondelete="CASCADE"), primary_key=True)
     interval = Column(Enum(PriceFeatureInterval), primary_key=True)
     start = Column(DateTime, index=True, nullable=True)
     end = Column(DateTime, index=True, nullable=True)

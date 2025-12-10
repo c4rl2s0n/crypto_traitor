@@ -6,7 +6,7 @@ from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.repositories import CoinRepository
-from traitor.core.research.market import CryptoApi
+from traitor.core.research.market import CryptoInfoApi
 from traitor.core.services import CoinService
 
 
@@ -15,12 +15,12 @@ class PriceWatchAgent(AgentBase):
     interval = timedelta(minutes=5)
 
     @inject
-    def __init__(self, crypto_api: CryptoApi, interval:relativedelta = Provide["config.intervals.PRICE_WATCH"]):
+    def __init__(self, crypto_info_api: CryptoInfoApi, interval:relativedelta = Provide["config.intervals.PRICE_WATCH"]):
         self.interval = interval
         self.coin_repo = CoinRepository()
         self.coins = self.coin_repo.get_active()
-        self.coin_service = CoinService(crypto_api=crypto_api)
-        logging.info(f"Init Agent {self.name}.\n\tAPI: {crypto_api.name}\n\tActive coins: {self.coins}")
+        self.coin_service = CoinService(crypto_info_api=crypto_info_api)
+        logging.info(f"Init Agent {self.name}.\n\tAPI: {crypto_info_api.name}\n\tActive coins: {self.coins}")
 
     def _do_task(self):
         # TODO: check if active coins have changed! This should be handled through an event to avoid unnecessary polling

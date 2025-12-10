@@ -14,6 +14,7 @@ def unwrap_md_json(text: str) -> str:
         return text[7:-3].strip()
     return text
 
+# TODO: fine-tune reasoning effort (?)
 
 class LLMAgent(ABC):
     name: str

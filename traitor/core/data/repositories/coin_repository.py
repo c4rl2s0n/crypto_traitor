@@ -1,9 +1,10 @@
+import logging
 from typing import List
 
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload, Session
 
-from traitor.core.data.models import ApiCoinID
+from traitor.core.data.models import ApiCoinID, CoinUrl
 from traitor.core.data.models.coin import Coin
 from traitor.core.data.repositories.repository import Repository
 
@@ -11,6 +12,10 @@ from traitor.core.data.repositories.repository import Repository
 class CoinRepository(Repository):
     def __init__(self):
         super().__init__(model=Coin)
+
+    def update_urls(self, urls: list[CoinUrl]):
+        with self.db.write_session() as s:
+            [s.merge(url) for url in urls]
 
     def get_by_api_ids(self, api_name: str, ids: list[str]) -> list[Coin]:
         with self.db.read_session() as s:
@@ -26,6 +31,22 @@ class CoinRepository(Repository):
                         ))
                     .all())
 
+    def get_by_ids(self, ids: list[int]) -> list[Coin]:
+        with self.db.read_session() as s:
+            return (s.query(Coin)
+                .filter(Coin.id.in_(ids))
+                .all())
+
+    def try_get(self, input_value: str) -> Coin | None:
+        coin = self.get_by_symbols([input_value])
+        if coin is None or len(coin) == 0:
+            coin = self.get_by_names([input_value])
+        if coin is None or len(coin) == 0:
+            return None
+        if len(coin) > 1:
+            logging.warn(f"Found {len(coin)} coins for the input '{input_value}'")
+        return coin[0]
+
     def get_by_symbols(self, symbols: list[str]) -> list[Coin]:
         with self.db.read_session() as s:
             return (s.query(Coin)
@@ -40,6 +61,18 @@ class CoinRepository(Repository):
                     .options(selectinload(Coin.apis))
                 .join(Coin.apis)
                 .filter(Coin.name.in_(names))
+                .all())
+
+    def get_by_symbol_and_name(self, symbol: str, name: str) -> list[Coin]:
+        with self.db.read_session() as s:
+            return (s.query(Coin)
+                    .options(selectinload(Coin.apis))
+                .join(Coin.apis)
+                .filter(
+                    and_(
+                        Coin.name == name,
+                        Coin.symbol == symbol,
+                    ))
                 .all())
 
     def get_active(self) -> List[Coin]:

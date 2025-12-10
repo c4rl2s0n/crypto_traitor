@@ -32,30 +32,42 @@ class LLMGemini(LLMAgent):
         gemini_tools = types.Tool(function_declarations=[t["description"] for t in prepared_tools.values()])
         config = types.GenerateContentConfig(tools=[gemini_tools])
 
+        responses = []
         while True:
             # 4. Issue a request to Gemini with tools allowed
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=contents,
+                contents=llm_contents,
                 config=config,
             )
+            calling_functions = False
             # Check for a function call
-            if response.candidates[0].content.parts[0].function_call:
-                function_call = response.candidates[0].content.parts[0].function_call
-                logging.debug(f"Function to call: {function_call.name}")
-                logging.debug(f"Arguments: {function_call.args}")
-                #  In a real app, you would call your function here:
+            content = response.candidates[0].content
+            parts = content.parts
+            for part in parts:
+                if part.function_call:
+                    calling_functions = True
+                    function_call = part.function_call
+                    logging.debug(f"Function to call: {function_call.name}")
+                    logging.debug(f"Arguments: {function_call.args}")
+                    responses.append(f"Function Call: {function_call.name}({function_call.args})")
 
-                result = prepared_tools[function_call.name]["function"](**function_call.args)
-                function_response_part = types.Part.from_function_response(
-                    name=function_call.name,
-                    response={"result": result},
-                )
-                llm_contents.append(response.candidates[0].content) # Append the content from the model's response.
-                llm_contents.append(types.Content(role="user", parts=[function_response_part])) # Append the function response
-            else:
-                logging.debug("No function call found in the response.")
-                return response.text
+                    # Actually call the function
+                    result = prepared_tools[function_call.name]["function"](**function_call.args)
+                    function_response_part = types.Part.from_function_response(
+                        name=function_call.name,
+                        response={"result": result},
+                    )
+                    llm_contents.append(content) # Append the content from the model's response.
+                    llm_contents.append(types.Content(role="user", parts=[function_response_part])) # Append the function response
+                else:
+                    responses.append(response.text)
+
+            # run as long as the LLM wants to call functions
+            if not calling_functions:
+                break
+        return "\n".join(responses)
+
 
     def _prepare_contents(self, contents: list[str]) -> types.ContentListUnionDict:
         return [types.Part.from_text(text=c) for c in contents]

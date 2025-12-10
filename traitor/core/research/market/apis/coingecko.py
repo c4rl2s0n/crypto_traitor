@@ -6,11 +6,12 @@ from requests import Response
 
 from traitor.core.data.models import *
 from traitor.core.research.market import *
+from traitor.core.research.market.crypto_info_api import CryptoInfoApi
 from traitor.core.research.market.exceptions import *
 from traitor.core.tools import api_bool, urljoin, strings_from_dict
 
 
-class CoinGecko(CryptoApi):
+class CoinGecko(CryptoInfoApi):
 
     name: str = "CoinGecko"
     base_url: str = "https://api.coingecko.com/api/v3/"
@@ -186,12 +187,13 @@ class CoinGecko(CryptoApi):
             result.append(price)
         return result
 
-    def update_coin_info(self, coin: Coin ) -> Coin:
+    def update_coin_info(self, coin: Coin) -> tuple[Coin, list[CoinUrl]]:
         """
         https://docs.coingecko.com/v3.0.1/reference/coins-id?playground=open
         :param coin:
         :return: updated Coin
         """
+
         api_coin_id = self._check_coin(coin)
 
         api = (f"/coins/{api_coin_id.api_coin_id}?localization=false"
@@ -203,7 +205,6 @@ class CoinGecko(CryptoApi):
         # extract URLs
         urls: list[CoinUrl] = [CoinUrl(coin_id=coin.id, url=entry[1], description=entry[0])
                                for entry in strings_from_dict(response["links"]) if entry[1].startswith("http")]
-        coin.urls.extend(urls)
 
         # extract generic info
         description = response["description"]["en"]
@@ -216,4 +217,4 @@ class CoinGecko(CryptoApi):
         coin.block_time = block_time
         coin.initialized = True
 
-        return coin
+        return coin, urls
