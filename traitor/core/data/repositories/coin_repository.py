@@ -37,31 +37,35 @@ class CoinRepository(Repository):
                 .filter(Coin.id.in_(ids))
                 .all())
 
-    def try_get(self, input_value: str) -> Coin | None:
-        coin = self.get_by_symbols([input_value.lower()])
+    def try_get(self, input_value: str, active_only: bool = False) -> Coin | None:
+        coin = self.get_by_symbols([input_value.lower()], active_only)
         if coin is None or len(coin) == 0:
-            coin = self.get_by_names([input_value])
+            coin = self.get_by_names([input_value], active_only)
         if coin is None or len(coin) == 0:
             return None
         if len(coin) > 1:
             logging.warn(f"Found {len(coin)} coins for the input '{input_value}'")
         return coin[0]
 
-    def get_by_symbols(self, symbols: list[str]) -> list[Coin]:
+    def get_by_symbols(self, symbols: list[str], active_only: bool = False) -> list[Coin]:
         with self.db.read_session() as s:
-            return (s.query(Coin)
+            q= (s.query(Coin)
                     .options(selectinload(Coin.apis))
                 .join(Coin.apis)
-                .filter(Coin.symbol.in_(symbols))
-                .all())
+                .filter(Coin.symbol.in_(symbols)))
+            if active_only:
+                q.filter(Coin.active == True)
+            return q.all()
 
-    def get_by_names(self, names: list[str]) -> list[Coin]:
+    def get_by_names(self, names: list[str], active_only: bool = False) -> list[Coin]:
         with self.db.read_session() as s:
-            return (s.query(Coin)
+            q =  (s.query(Coin)
                     .options(selectinload(Coin.apis))
                 .join(Coin.apis)
-                .filter(Coin.name.in_(names))
-                .all())
+                .filter(Coin.name.in_(names)))
+            if active_only:
+                q.filter(Coin.active == True)
+            return q.all()
 
     def get_by_symbol_and_name(self, symbol: str, name: str) -> list[Coin]:
         with self.db.read_session() as s:

@@ -32,8 +32,8 @@ class ExchangeRateTool(LLMTool):
         self.coin_repo = CoinRepository()
 
     def execute(self, coin_out: str, coin_in: str, fixed: bool = False) -> float | str:
-        c_out = self.coin_repo.try_get(coin_out)
-        c_in = self.coin_repo.try_get(coin_in)
+        c_out = self.coin_repo.try_get(coin_out, active_only=True)
+        c_in = self.coin_repo.try_get(coin_in, active_only=True)
         if c_out is None:
             return f"No coin found with name or symbol {coin_out}"
         if c_in is None:

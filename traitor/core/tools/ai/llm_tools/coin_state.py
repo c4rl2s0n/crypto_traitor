@@ -34,6 +34,7 @@ class CoinStateTool(LLMTool):
 
     # TODO: instead of directly changing the coin-state, just propose the update to the user, which can then manually activate/deactivate the coin
     # TODO: when there are multiple coins with the same symbol/name, prompt the LLM again, to choose the id which should be used
+    #  When user is prompted, it is not too important to get the correct coin from the Database
     def execute(self, coin: str, active: bool, reason: str | None = None) -> str:
         c = self.repo.try_get(coin)
         if c is None:

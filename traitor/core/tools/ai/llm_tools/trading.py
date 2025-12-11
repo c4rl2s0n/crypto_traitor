@@ -42,8 +42,8 @@ class TradingTool(LLMTool):
         self.exchange_api = StealthexApi()
 
     def execute(self, coin_out: str, coin_in: str, amount_out: float, reason: str, fixed: bool = False) -> str:
-        c_out = self.coin_repo.try_get(coin_out)
-        c_in = self.coin_repo.try_get(coin_in)
+        c_out = self.coin_repo.try_get(coin_out, active_only=True)
+        c_in = self.coin_repo.try_get(coin_in, active_only=True)
 
         if c_out is None:
             return f"No coin found with name or symbol {coin_out}"
