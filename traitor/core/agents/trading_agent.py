@@ -11,7 +11,7 @@ from traitor.core.data.models import Coin, SummaryTimeframe
 from traitor.core.research.market.apis.stealthexchange import StealthexApi
 from traitor.core.tools import LLMAgent
 from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository, PriceAnalysisRepository, \
-    TradingStrategyRepository, PricesRepository
+    TradingStrategyRepository, PricesRepository, TradingLogRepository
 from traitor.core.tools.ai.llm_tools import ExchangeRateTool, TradingStrategyTool, CoinStateTool
 from traitor.core.tools.ai.llm_tools.trading import TradingTool
 from traitor.core.tools.trading.paper_run import PaperRun
@@ -28,6 +28,7 @@ class TradingAgent(AgentBase):
 
         self.coin_repo = CoinRepository()
         self.trading_strategy_repo = TradingStrategyRepository()
+        self.trading_log_repo = TradingLogRepository()
         self.news_repo = NewsAnalysisRepository()
         self.price_analysis_repo = PriceAnalysisRepository()
         self.price_repo = PricesRepository()
@@ -71,7 +72,8 @@ class TradingAgent(AgentBase):
         prompt = template.format(
             coin_analysis="\n---\n".join(coin_analysis),
             date=datetime.now().strftime("%Y-%m-%d %H:%M"),
-            trading_strategy=self._get_strategy()
+            trading_strategy=self._get_strategy(),
+            trading_history=self._get_trading_history(5)
         )
         logging.debug(f"Final Prompt:\n{prompt}")
 
@@ -141,3 +143,9 @@ class TradingAgent(AgentBase):
         if strategy is None:
             strategy = "No strategy yet. Define your strategy to perform consistent trading."
         return strategy
+
+    def _get_trading_history(self, count: int) -> str:
+        history = self.trading_log_repo.get_latest(count)[::-1]
+        if len(history) == 0:
+            return "No trades have been performed yet."
+        return "\n".join([h.to_string() for h in history])
