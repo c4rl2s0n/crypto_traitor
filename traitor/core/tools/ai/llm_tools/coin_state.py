@@ -1,10 +1,9 @@
 import logging
 from datetime import datetime
 
-from traitor.core.data.models import TradingStrategy
-from traitor.core.data.repositories import TradingStrategyRepository, CoinRepository
+from traitor.core.data.models import ActionProposal
+from traitor.core.data.repositories import ActionProposalRepository
 from traitor.core.tools.ai.llm_tools.llm_tool import LLMTool
-from traitor.core.tools.trading.wallet import Wallet
 
 
 class CoinStateTool(LLMTool):
@@ -28,33 +27,15 @@ class CoinStateTool(LLMTool):
         },
         "required": ["coin"],
     }
-    def __init__(self, wallet: Wallet | None = None):
-        self.repo = CoinRepository()
-        self.wallet = wallet
+    def __init__(self):
+        self.action_proposal_repo = ActionProposalRepository()
 
-    # TODO: instead of directly changing the coin-state, just propose the update to the user, which can then manually activate/deactivate the coin
-    # TODO: when there are multiple coins with the same symbol/name, prompt the LLM again, to choose the id which should be used
-    #  When user is prompted, it is not too important to get the correct coin from the Database
-    def execute(self, coin: str, active: bool, reason: str | None = None) -> str:
-        c = self.repo.try_get(coin)
-        if c is None:
-            return f"Coin {coin} was not found. Its state cannot be updated. It cannot be traded."
-        if not c.can_trade:
-            return f"The coin {coin} cannot be traded, so we cannot activate or use it."
-
-        c.active = active
-        self.repo.update(c)
-        info = f"Changed state of coin {c.name} ({c.symbol}/{c.id}) to active={active}"
-        logging.info(info)
-
-        # update the wallet, if available
-        if self.wallet is not None:
-            if not self.wallet.contains_coin(c.id):
-                self.wallet.register_coin(c)
-            else:
-                if active:
-                    self.wallet.activate_coin(c.id)
-                else:
-                    self.wallet.deactivate_coin(c.id)
-
-        return info
+    def execute(self, coin: str, active: bool, reason: str | None = None):
+        action = "activate" if active else "deactivate"
+        proposal = ActionProposal(
+            proposal=f"You should consider to {action} the coin {coin}",
+            reason=reason,
+            time=datetime.now(),
+        )
+        self.action_proposal_repo.add(proposal)
+        logging.info(f"CoinState-Proposal: {proposal.proposal}")

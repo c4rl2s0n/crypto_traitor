@@ -1,3 +1,4 @@
+from .action_proposal import ActionProposal
 from .api_coin_id import *
 from .article import Article
 from .coin import *
@@ -12,6 +13,7 @@ from .trading_log import TradingLog
 from .trading_strategy import TradingStrategy
 
 __all__ = [
+    "ActionProposal",
     "Article",
     "Coin", "CoinUrl", "ApiCoinID", "CoinApiType",
     "NewsSourceCategory",

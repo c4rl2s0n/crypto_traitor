@@ -1,3 +1,4 @@
+from .action_proposal_repository import ActionProposalRepository
 from .article_repository import ArticleRepository
 from .coin_repository import CoinRepository
 from .price_analysis_repository import PriceAnalysisRepository
@@ -10,6 +11,7 @@ from .repository import Repository
 from .news_analysis_repository import NewsAnalysisRepository
 
 __all__ = [
+    "ActionProposalRepository",
     "ArticleRepository",
     "CoinRepository",
     "PriceAnalysisRepository", "PriceFeatureRepository", "PricesRepository",
