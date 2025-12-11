@@ -89,13 +89,12 @@ def run():
     ]
     agents: list[AgentBase] = [
         TradingAgent(),
-        PriceWatchAgent(),
-        NewsResearchAgent(),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        NewsAnalysisAgent(),
+        # PriceWatchAgent(),
+        # NewsResearchAgent(),
+        # PriceAnalysisAgent(interval=relativedelta(minutes=5)),
+        # NewsAnalysisAgent(),
     ]
-    agents.extend(price_feature_extraction_agents)
-    # agents: list[AgentBase] = [TradingAgent()]
+    # agents.extend(price_feature_extraction_agents)
 
     # Create threads
     threads = [

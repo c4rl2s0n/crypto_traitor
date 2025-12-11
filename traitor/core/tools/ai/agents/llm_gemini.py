@@ -1,10 +1,12 @@
 import logging
+from datetime import datetime
 from typing import List, Callable
 from PIL.Image import Image
 from dependency_injector.wiring import inject, Provide
 from google import genai
 from google.genai import types
 
+from traitor.core.data.models import TokenUsage
 from traitor.core.tools.ai.llm_agent import LLMAgent
 from traitor.core.tools.ai.llm_tools import LLMTool
 
@@ -15,23 +17,46 @@ class LLMGemini(LLMAgent):
     def __init__(self, model: str = 'gemini-2.5-flash', api_key=Provide["config.api_keys.GEMINI"]):
         self.model_name = model
         self.client = genai.Client(api_key=api_key)
+        super().__init__()
 
-    def process_text(self, contents: list[str]) -> str:
+    def process_text(self, contents: list[str], prompt_cache_key: str | None = None, usage_comment: str | None = None) -> str:
         llm_content = self._prepare_contents(contents)
         response = self.client.models.generate_content(
             model=self.model_name,
             contents=llm_content,
         )
+        self.token_usage_repo.add(TokenUsage(
+            time=datetime.now(),
+            # prompt_token_count includes the cached token count, but we want to separate
+            input_tokens=response.usage_metadata.prompt_token_count - response.usage_metadata.cached_content_token_count,
+            cached_tokens=response.usage_metadata.cached_content_token_count,
+            output_tokens=response.usage_metadata.candidates_token_count,
+            reasoning_tokens=response.usage_metadata.thoughts_token_count,
+            tool_tokens=response.usage_metadata.tool_use_prompt_token_count,
+            api=self.name,
+            model=self.model_name,
+            comment=usage_comment,
+        ))
         return response.text
 
-    def process_tooled(self, contents: List[str], tools: list[LLMTool] = None) -> str:
+    def process_tooled(self, contents: List[str], tools: list[LLMTool] = None, prompt_cache_key: str | None = None, usage_comment: str | None = None) -> str:
         # prepare tools
         prepared_tools = self._prepare_tools(tools)
         llm_contents: types.ContentListUnionDict = self._prepare_contents(contents)
 
         gemini_tools = types.Tool(function_declarations=[t["description"] for t in prepared_tools.values()])
         config = types.GenerateContentConfig(tools=[gemini_tools])
-
+        token_usage = TokenUsage(
+            time=datetime.now(),
+            input_tokens=0,
+            cached_tokens=0,
+            output_tokens=0,
+            reasoning_tokens=0,
+            tool_tokens=0,
+            api=self.name,
+            model=self.model_name,
+            comment=usage_comment,
+        )
         responses = []
         while True:
             # 4. Issue a request to Gemini with tools allowed
@@ -40,6 +65,15 @@ class LLMGemini(LLMAgent):
                 contents=llm_contents,
                 config=config,
             )
+
+            # count tokens
+            token_usage.input_tokens += response.usage_metadata.prompt_token_count - response.usage_metadata.cached_content_token_count
+            token_usage.cached_tokens += response.usage_metadata.cached_content_token_count
+            token_usage.output_tokens += response.usage_metadata.candidates_token_count
+            token_usage.reasoning_tokens += response.usage_metadata.thoughts_token_count
+            token_usage.tool_tokens += response.usage_metadata.tool_use_prompt_token_count
+
+
             calling_functions = False
             # Check for a function call
             content = response.candidates[0].content
@@ -66,6 +100,7 @@ class LLMGemini(LLMAgent):
             # run as long as the LLM wants to call functions
             if not calling_functions:
                 break
+        self.token_usage_repo.add(token_usage)
         return "\n".join(responses)
 
 

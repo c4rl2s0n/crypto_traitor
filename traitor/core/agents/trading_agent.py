@@ -112,6 +112,8 @@ class TradingAgent(AgentBase):
 
         # 3. Validate that we have both data
         if not news_summary:
+            # TODO: Maybe don't 'drop' coins without news. (e.g. Monero did not show up in news, but we might still give the prices to the LLM?)
+            #  maybe it is also better to drop it and instead include a news source for that crypto first...
             logging.debug(f"Skipping {coin.name}: No News Analysis found.")
             return None
 
