@@ -49,15 +49,15 @@ class PriceAnalysisAgent(AgentBase):
         self.price_repo = PricesRepository()
         self.price_analysis_repo = PriceAnalysisRepository()
         self.price_feature_repo = PriceFeatureRepository()
-        self.coins = self.coin_repo.get_active()
-        logging.info(f"Init Agent {self.name}.\n\tActive coins: {[c.name for c in self.coins]}")
+        logging.info(f"Init Agent {self.name}.")
 
 
     def _do_task(self):
-        # TODO: check if active coins have changed! This should be handled through an event to avoid unnecessary polling
         logging.info("Analyzing prices...")
+
+        coins = self.coin_repo.get_active()
         try:
-            for coin in self.coins:
+            for coin in coins:
                 coin_features = self.price_feature_repo.get_features(coin.id)
                 if len(coin_features) == 0:
                     logging.debug(f"No features available for coin {coin.name}. Skipping analysis.")

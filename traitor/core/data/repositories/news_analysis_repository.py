@@ -10,13 +10,6 @@ class NewsAnalysisRepository(Repository):
     
     def __init__(self):
         super().__init__(model=CoinNewsSummary)
-
-    def get_articles_in_range(self, start_date: datetime) -> List[Article]:
-        return self.db.session.query(Article).filter(
-            Article.date_published >= start_date.date(),
-            Article.summary.isnot(None),
-            Article.summary != ""
-        ).all()
     
     def get_latest_for_coin(self, coin_id: int, timeframe: SummaryTimeframe = SummaryTimeframe.WEEK) -> CoinNewsSummary:
         return self.db.session.query(CoinNewsSummary).filter_by(

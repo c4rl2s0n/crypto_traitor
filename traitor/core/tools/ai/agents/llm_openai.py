@@ -89,7 +89,11 @@ class LLMOpenAI(LLMAgent):
                 if output.type == "function_call":
                     has_tool = True
                     responses.append(f"Function Call: {output.name}({output.arguments})")
-                    function_result = prepared_tools[output.name]["function"](json.loads(output.arguments))
+                    try:
+                        function_result = prepared_tools[output.name]["function"](**json.loads(output.arguments))
+                    except Exception as e:
+                        function_result = f"Failed to call the function ({output.name})"
+                        logging.exception(function_result)
 
                     function_call_output: FunctionCallOutput = {
                         "type": "function_call_output",
@@ -99,8 +103,8 @@ class LLMOpenAI(LLMAgent):
                         })
                     }
                     llm_contents.append(function_call_output)
-                else:
-                    responses.append(output)
+
+            responses.append(response.output_text)
 
             if not has_tool:
                 break

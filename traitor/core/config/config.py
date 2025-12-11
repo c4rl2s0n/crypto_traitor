@@ -8,6 +8,7 @@ class PROMPTS:
 
     _price_analysis = "traitor/core/assets/prompts/price_analysis.md"
     _news_analysis = "traitor/core/assets/prompts/news_analysis.md"
+    _coin_spotting = "traitor/core/assets/prompts/coin_spotting.md"
     _trading_strategy = "traitor/core/assets/prompts/trading_strategy.md"
     _asset_analysis = "traitor/core/assets/prompts/asset_analysis.md"
 
@@ -44,6 +45,12 @@ class PROMPTS:
         Used by AnalysisService to generate the meta-summary
         """
         return self._news_analysis
+    @property
+    def coin_spotting(self):
+        """
+        Used by AnalysisService to find new interesting coins
+        """
+        return self._coin_spotting
     
     @property
     def asset_analysis(self):

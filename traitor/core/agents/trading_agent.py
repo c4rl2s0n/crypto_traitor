@@ -9,16 +9,12 @@ from dependency_injector.wiring import inject, Provide
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.models import Coin, SummaryTimeframe
 from traitor.core.research.market.apis.stealthexchange import StealthexApi
-from traitor.core.research.news.news_source import NewsSource
-from traitor.core.services import NewsResearchService
-from traitor.core.tools import NewsSummarAIzer, LLMAgent
+from traitor.core.tools import LLMAgent
 from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository, PriceAnalysisRepository, \
     TradingStrategyRepository, PricesRepository
-from traitor.core.tools.ai import LLMGemini
-from traitor.core.tools.ai.llm_tools import ExchangeRateTool, TradingStrategyTool
+from traitor.core.tools.ai.llm_tools import ExchangeRateTool, TradingStrategyTool, CoinStateTool
 from traitor.core.tools.ai.llm_tools.trading import TradingTool
 from traitor.core.tools.trading.paper_run import PaperRun
-from traitor.core.tools.trading.wallet import Wallet
 
 
 class TradingAgent(AgentBase):
@@ -35,15 +31,10 @@ class TradingAgent(AgentBase):
         self.news_repo = NewsAnalysisRepository()
         self.price_analysis_repo = PriceAnalysisRepository()
         self.price_repo = PricesRepository()
-        self.coins = self.coin_repo.get_active()
 
-        wallet = Wallet()
-        for c in self.coins:
-            wallet.register_coin(c)
-            wallet.add(coin=c, amount=random.random())
-        self.paper_run = PaperRun(initial_balance=wallet)
+        self.paper_run = PaperRun()
 
-        logging.info(f"Init TradingAgent: Ready to merge intelligence.\n\t{wallet.portfolio_str()}")
+        logging.info(f"Init TradingAgent: Ready to merge intelligence.\n\t{self.paper_run.wallet.portfolio_str()}")
 
     def _do_task(self):
         logging.info("Evaluating trading opportunities (News + Price)...")
@@ -54,6 +45,8 @@ class TradingAgent(AgentBase):
         decision = self._make_strategic_decision(active_coins)
 
         logging.info(decision)
+        n = 5
+        logging.info(f"Last {n} Trades: {self.paper_run.trade_log_preview(n)}")
 
 
     def _make_strategic_decision(self, coins: list[Coin]) -> str:
@@ -89,7 +82,8 @@ class TradingAgent(AgentBase):
                 tools=[
                     ExchangeRateTool(StealthexApi()),
                     TradingStrategyTool(),
-                    TradingTool(self.paper_run)
+                    TradingTool(self.paper_run),
+                    CoinStateTool()
                 ]
             )
 

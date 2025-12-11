@@ -6,6 +6,7 @@ class Article(Base):
     __tablename__ = 'articles'
 
     url = Column(String, primary_key=True)
+    source = Column(String, nullable=True)
     category = Column(String)
     title = Column(String)
     date_published = Column(DATE)

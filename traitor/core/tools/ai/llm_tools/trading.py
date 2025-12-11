@@ -41,19 +41,20 @@ class TradingTool(LLMTool):
         self.network = network
         self.exchange_api = StealthexApi()
 
-    def execute(self, coin_out: str, coin_in: str, amount_out: float, reason: str, rate: float | None = None, fixed: bool = False) -> str:
+    def execute(self, coin_out: str, coin_in: str, amount_out: float, reason: str, fixed: bool = False) -> str:
         c_out = self.coin_repo.try_get(coin_out)
         c_in = self.coin_repo.try_get(coin_in)
-        if rate is None:
-            rate = self.exchange_api.get_exchange_rate(c_out, c_in, fixed=fixed)
-        if rate is None:
-            return "Could not obtain exchange rate for the given coins"
+
         if c_out is None:
             return f"No coin found with name or symbol {coin_out}"
         if c_in is None:
             return f"No coin found with name or symbol {coin_in}"
 
-        self.network.trade(c_out, c_in, amount_out, amount_out * rate)
+        rate = self.exchange_api.get_exchange_rate(c_out, c_in, fixed=fixed)
+        if rate is None:
+            return "Could not obtain exchange rate for the given coins"
+
+        self.network.trade(c_out, c_in, amount_out, amount_out * rate, reason)
         return "Trade performed."
 
 

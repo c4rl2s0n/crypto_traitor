@@ -1,25 +1,26 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict
 
 from traitor.core.config.config import PROMPTS
 from traitor.core.data.models import Coin, CoinNewsSummary, SummaryTimeframe
-from traitor.core.data.repositories import NewsAnalysisRepository
+from traitor.core.data.repositories import NewsAnalysisRepository, ArticleRepository
 from traitor.core.tools import LLMAgent
 
+
 class NewsAnalysisService:
-    def __init__(self, repository: NewsAnalysisRepository, llm: LLMAgent, prompts: PROMPTS):
-        self.repository = repository
+    def __init__(self, llm: LLMAgent, prompts: PROMPTS):
+        self.news_analysis_repo = NewsAnalysisRepository()
+        self.article_repo = ArticleRepository()
         self.llm = llm
         self.prompts = prompts
 
-    def analyze_coin(self, coin: Coin, timeframe: SummaryTimeframe, days_back: int):
+    def analyze_coin(self, coin: Coin, timeframe: SummaryTimeframe):
         logging.info(f"Analyzing {coin.name} over last {timeframe}...")
-        
+        days_back = timeframe.value
         start_date = datetime.now() - timedelta(days=days_back)
         
-        articles = self.repository.get_articles_in_range(start_date)
+        articles = self.article_repo.get_in_range(start_date, summarized_only=True)
         
         relevant_data = []
         total_sentiment = 0.0
@@ -75,5 +76,5 @@ class NewsAnalysisService:
             sentiment_score=avg_sentiment,
             content=meta_summary_text
         )
-        self.repository.add(summary_obj)
+        self.news_analysis_repo.add(summary_obj)
         logging.info(f"Analysis saved for {coin.name}: Score {avg_sentiment}")

@@ -7,9 +7,9 @@ from datetime import datetime
 from traitor.core.data import Base
 
 class SummaryTimeframe(enum.Enum):
-    DAY = "24h"
-    WEEK = "7d"
-    MONTH = "30d"
+    DAY = 1
+    WEEK = 7
+    MONTH = 30
 
 class CoinNewsSummary(Base):
     __tablename__ = 'coin_news_summaries'

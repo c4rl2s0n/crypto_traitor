@@ -6,7 +6,8 @@ from requests import Response
 from traitor.core.data.models import Coin, ApiCoinID
 from traitor.core.data.repositories import CoinRepository
 from traitor.core.research.market.exchange_api import CryptoExchangeApi
-from traitor.core.tools import urljoin, dict_to_json
+from traitor.core.tools.api import urljoin
+from traitor.core.tools.misc import dict_to_json
 
 
 class StealthexApi(CryptoExchangeApi):

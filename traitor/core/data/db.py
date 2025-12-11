@@ -1,3 +1,4 @@
+import logging
 from contextlib import contextmanager
 from typing import ContextManager
 
@@ -71,7 +72,7 @@ class Database(object):
                 conn.execute(text("SELECT create_hypertable('prices', 'time', if_not_exists => TRUE, migrate_data => TRUE);"))
                 conn.execute(text("SELECT create_hypertable('token_usage', 'time', if_not_exists => TRUE, migrate_data => TRUE);"))
             except Exception as e:
-                pass
+                logging.exception("failed to create hypertables")
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_coin_id_time ON prices(coin_id, time DESC);"))
 
         with self.engine.connect() as conn:

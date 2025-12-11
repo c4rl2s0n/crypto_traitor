@@ -17,9 +17,12 @@ class Coin(Base):
     image = Column(String, nullable=True)
     genesis_date = Column(DateTime, nullable=True)
     block_time_in_minutes = Column(Float, nullable=True)
-    initialized = Column(Boolean, default=False)
 
+    balance = Column(Float, default=0)
+
+    initialized = Column(Boolean, default=False)
     active = Column(Boolean, default=False)
+    can_trade = Column(Boolean, default=False)
     apis = relationship("ApiCoinID")
     # urls = relationship("CoinUrl")
     # price_analyses = relationship("PriceAnalysis")

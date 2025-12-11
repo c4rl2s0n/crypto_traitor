@@ -6,8 +6,8 @@ from traitor.core.data import Base
 class TokenUsage(Base):
     __tablename__ = "token_usage"
 
+    time = Column(DateTime(timezone=True), nullable=False, primary_key=True)
     id = Column(Integer, primary_key=True, autoincrement=True)
-    time = Column(DateTime(timezone=True), nullable=False)
     input_tokens = Column(Integer, nullable=False)
     cached_tokens = Column(Integer, nullable=False)
     output_tokens = Column(Integer, nullable=False)

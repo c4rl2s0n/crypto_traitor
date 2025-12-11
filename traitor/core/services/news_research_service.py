@@ -1,8 +1,7 @@
 import logging
 
 from traitor.core.data.repositories import ArticleRepository
-from traitor.core.research.news.news_source import NewsSource
-from traitor.core.tools import NewsSummarAIzer
+from traitor.core.research.news import NewsSummarAIzer, NewsSource
 
 
 class NewsResearchService(object):

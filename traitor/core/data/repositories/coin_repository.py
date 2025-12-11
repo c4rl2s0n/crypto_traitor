@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, update
 from sqlalchemy.orm import selectinload, Session
 
 from traitor.core.data.models import ApiCoinID, CoinUrl
@@ -38,7 +38,7 @@ class CoinRepository(Repository):
                 .all())
 
     def try_get(self, input_value: str) -> Coin | None:
-        coin = self.get_by_symbols([input_value])
+        coin = self.get_by_symbols([input_value.lower()])
         if coin is None or len(coin) == 0:
             coin = self.get_by_names([input_value])
         if coin is None or len(coin) == 0:
@@ -78,3 +78,11 @@ class CoinRepository(Repository):
     def get_active(self) -> List[Coin]:
         with self.db.read_session() as s:
             return s.query(Coin).options(selectinload(Coin.apis)).filter(Coin.active).all()
+
+    def clear_balance(self):
+        with self.db.write_session() as s:
+            s.execute(update(Coin).values(balance=0))
+
+    def _trade_all(self):
+        with self.db.write_session() as s:
+            s.execute(update(Coin).values(can_trade=True))

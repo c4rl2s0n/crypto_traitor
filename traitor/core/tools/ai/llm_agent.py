@@ -2,9 +2,7 @@ import abc
 import json
 import logging
 from abc import ABC
-from typing import List, Callable, TypedDict, Optional
-
-from PIL.Image import Image
+from typing import List
 
 from traitor.core.data.repositories.token_usage_repository import TokenUsageRepository
 from traitor.core.tools.ai.llm_tools import LLMTool

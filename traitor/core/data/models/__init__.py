@@ -8,6 +8,7 @@ from .coin_news_summary import *
 from .price_analysis import PriceAnalysis
 from .price_feature import PriceFeature, PriceFeatureInterval
 from .token_usage import TokenUsage
+from .trading_log import TradingLog
 from .trading_strategy import TradingStrategy
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "Price", "PriceAnalysis", "PriceFeature", "PriceFeatureInterval",
     "TradingStrategy",
     "CoinNewsSummary", "SummaryTimeframe",
-    "TokenUsage"
+    "TokenUsage",
+    "TradingLog",
 ]

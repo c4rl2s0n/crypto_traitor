@@ -23,9 +23,7 @@ class PriceFeatureExtractionAgent(AgentBase):
         self.coin_repo = CoinRepository()
         self.price_repo = PricesRepository()
         self.price_feature_repo = PriceFeatureRepository()
-        self.coins = self.coin_repo.get_active()
-        self.coin_ids = [c.id for c in self.coins]
-        logging.info(f"Init Agent {self.name}.\n\tFeature Interval: {self.feature_interval}\n\tActive coins: {[c.name for c in self.coins]}")
+        logging.info(f"Init Agent {self.name}.\n\tFeature Interval: {self.feature_interval}.")
 
     @property
     def start(self) -> datetime | None:
@@ -47,13 +45,14 @@ class PriceFeatureExtractionAgent(AgentBase):
                 return now - relativedelta(hours=1)
 
     def _do_task(self):
-        # TODO: check if active coins have changed! This should be handled through an event to avoid unnecessary polling
         logging.info(f"Extracting price features (per {self.feature_interval})...")
+
+        coin_ids = [c.id for c in self.coin_repo.get_active()]
         try:
             start = self.start
 
             # get the prices in the interval
-            prices = self.price_repo.get_prices_df(self.coin_ids, start=start)
+            prices = self.price_repo.get_prices_df(coin_ids, start=start)
             prices = prices.sort_values(["coin_id", "time"]).reset_index(drop=True)
 
             # extract features for the prices

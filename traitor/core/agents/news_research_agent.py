@@ -4,10 +4,9 @@ from dateutil.relativedelta import relativedelta
 from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
-from traitor.core.config import PROMPTS
+from traitor.core.research.news import NewsSummarAIzer
 from traitor.core.research.news.news_source import NewsSource
 from traitor.core.services import NewsResearchService
-from traitor.core.tools import NewsSummarAIzer, LLMAgent
 
 
 class NewsResearchAgent(AgentBase):

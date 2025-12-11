@@ -8,10 +8,11 @@ from dateutil.relativedelta import relativedelta
 import traitor
 from traitor.core.agents import *
 from traitor.core.agents.agent_base import stop_event
+from traitor.core.agents.coin_spotting_agent import CoinSpottingAgent
 from traitor.core.agents.price_analysis_agent import PriceAnalysisAgent
 from traitor.core.config import container, logs
 from traitor.core.data.models import PriceFeatureInterval
-from traitor.core.data.repositories import PriceFeatureRepository, ArticleRepository
+from traitor.core.data.repositories import PriceFeatureRepository, ArticleRepository, CoinRepository
 from traitor.core.research.news import NewsSummarAIzer
 from traitor.core.services import CoinService, NewsResearchService
 
@@ -20,10 +21,17 @@ from traitor.core.services import CoinService, NewsResearchService
 #  - Load articles (if empty, or if some are missing a summary)
 #  - Generate first news_summaries
 #  -> Make sure LLM can start trading when all the agents are started
+#  -> For real trading, setup would clear and update all coin balances!
+#  -> instead of loading all coins from CoinGecko, maybe it is better to load the coins from StealthEX and then fetch additional info from CoinGecko?
 def setup():
     # delete all stored features to enforce re-analysis and avoid usage of outdated features
     price_feature_repo = PriceFeatureRepository()
-    #price_feature_repo.clear()
+    price_feature_repo.clear()
+    coin_repo = CoinRepository()
+    coin_repo.clear_balance()
+    # TODO: load real balances on start!
+    # TODO: remove this later
+    coin_repo._trade_all()
 
     # scan for coins
     coin_service = CoinService()
@@ -39,17 +47,6 @@ def setup():
             coin_service.activate_coin(c)
     for coin in coins:
         coin_service.load_price_history(coin)
-
-    # make sure some articles are loaded before starting the bot
-    article_repo = ArticleRepository()
-    research_service = NewsResearchService(summarizer=NewsSummarAIzer())
-    if article_repo.empty():
-        # lookup news, if no articles are available
-        research_service.research_news(container.news_sources())
-    else:
-        # otherwise, make sure all articles are summarized
-        research_service.inspect_articles()
-
 
 
 def run():
@@ -89,12 +86,13 @@ def run():
     ]
     agents: list[AgentBase] = [
         TradingAgent(),
-        # PriceWatchAgent(),
-        # NewsResearchAgent(),
-        # PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        # NewsAnalysisAgent(),
+        CoinSpottingAgent(),
+        PriceWatchAgent(),
+        NewsResearchAgent(),
+        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
+        NewsAnalysisAgent(),
     ]
-    # agents.extend(price_feature_extraction_agents)
+    agents.extend(price_feature_extraction_agents)
 
     # Create threads
     threads = [

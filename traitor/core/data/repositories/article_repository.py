@@ -1,4 +1,6 @@
-from sqlalchemy import or_
+from datetime import datetime
+
+from sqlalchemy import or_, and_
 
 from traitor.core.data.models.article import Article
 from traitor.core.data.repositories.repository import Repository
@@ -20,3 +22,14 @@ class ArticleRepository(Repository):
                             Article.summary == ""
                         )
                     ).all()
+
+
+    def get_in_range(self, start_date: datetime, summarized_only: bool = True) -> list[Article]:
+        with self.db.read_session() as s:
+            q =s.query(Article).filter(Article.date_published >= start_date.date())
+            if summarized_only:
+                q.filter(
+                    Article.summary.isnot(None),
+                    Article.summary != ""
+                )
+            return q.all()

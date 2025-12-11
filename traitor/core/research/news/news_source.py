@@ -36,6 +36,7 @@ class NewsSource(ABC):
     def get_article(self, url: str, category: str) -> Article:
         article = scraper.extract(url, self._parse_article)
         article.url = url
+        article.source = self.name
         article.category = category
         return article
 

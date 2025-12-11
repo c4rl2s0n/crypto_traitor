@@ -35,7 +35,7 @@ class NewsAnalysisAgent(AgentBase):
                 #self.service.analyze_coin(coin, "24h", days_back=1)
                 
                 # 2. Weekly analysis (7d) - Optional, consumes more tokens
-                self.service.analyze_coin(coin, SummaryTimeframe.WEEK, days_back=7)
+                self.service.analyze_coin(coin, SummaryTimeframe.WEEK)
 
                 # 3. Monthly analysis (30d) - Optional, consumes more tokens
                 #self.service.analyze_coin(coin, "30d", days_back=30)

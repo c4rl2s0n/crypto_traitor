@@ -209,11 +209,11 @@ class CoinGecko(CryptoInfoApi):
         # extract generic info
         description = response["description"]["en"]
         image = response["image"]["large"]
-        genesis_date = datetime.strptime(response["genesis_date"], "%Y-%m-%d").date()
+        genesis_date = response["genesis_date"]
         block_time = response["block_time_in_minutes"]
         coin.description = description
         coin.image = image
-        coin.genesis_date = genesis_date
+        coin.genesis_date = datetime.strptime(genesis_date, "%Y-%m-%d").date() if genesis_date is not None else None
         coin.block_time = block_time
         coin.initialized = True
 
