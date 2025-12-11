@@ -13,6 +13,8 @@ class TokenUsage(Base):
     output_tokens = Column(Integer, nullable=False)
     reasoning_tokens = Column(Integer, nullable=True)
     tool_tokens = Column(Integer, nullable=True)
+    total_tokens = Column(Integer, nullable=False)
     api = Column(String)
+    agent = Column(String)
     model = Column(String)
     comment = Column(String, nullable=True)

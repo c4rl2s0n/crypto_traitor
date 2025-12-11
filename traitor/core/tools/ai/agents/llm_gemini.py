@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import datetime
 from typing import List, Callable
 from PIL.Image import Image
@@ -33,7 +34,9 @@ class LLMGemini(LLMAgent):
             output_tokens=response.usage_metadata.candidates_token_count,
             reasoning_tokens=response.usage_metadata.thoughts_token_count,
             tool_tokens=response.usage_metadata.tool_use_prompt_token_count,
+            total_tokens=response.usage_metadata.total_token_count,
             api=self.name,
+            agent=threading.current_thread().name,
             model=self.model_name,
             comment=usage_comment,
         ))
@@ -53,7 +56,9 @@ class LLMGemini(LLMAgent):
             output_tokens=0,
             reasoning_tokens=0,
             tool_tokens=0,
+            total_tokens=0,
             api=self.name,
+            agent=threading.current_thread().name,
             model=self.model_name,
             comment=usage_comment,
         )
@@ -72,6 +77,7 @@ class LLMGemini(LLMAgent):
             token_usage.output_tokens += response.usage_metadata.candidates_token_count
             token_usage.reasoning_tokens += response.usage_metadata.thoughts_token_count
             token_usage.tool_tokens += response.usage_metadata.tool_use_prompt_token_count
+            token_usage.total_tokens += response.usage_metadata.total_token_count
 
 
             calling_functions = False

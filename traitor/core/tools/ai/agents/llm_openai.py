@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 from datetime import datetime
 from typing import List, Union
 
@@ -35,7 +36,9 @@ class LLMOpenAI(LLMAgent):
             cached_tokens=response.usage.input_tokens_details.cached_tokens,
             output_tokens=response.usage.output_tokens,
             reasoning_tokens=response.usage.output_tokens_details.reasoning_tokens,
+            total_tokens=response.usage.total_tokens,
             api=self.name,
+            agent=threading.current_thread().name,
             model=self.model_name,
             comment=usage_comment,
         ))
@@ -61,7 +64,9 @@ class LLMOpenAI(LLMAgent):
             cached_tokens=0,
             output_tokens=0,
             reasoning_tokens=0,
+            total_tokens=0,
             api=self.name,
+            agent=threading.current_thread().name,
             model=self.model_name,
             comment=usage_comment,
         )
@@ -82,6 +87,7 @@ class LLMOpenAI(LLMAgent):
             token_usage.cached_tokens += response.usage.input_tokens_details.cached_tokens
             token_usage.output_tokens += response.usage.output_tokens
             token_usage.reasoning_tokens += response.usage.output_tokens_details.reasoning_tokens
+            token_usage.total_tokens += response.usage.total_tokens
 
             # Model will either return text or a tool call
             has_tool = False
