@@ -5,10 +5,7 @@ from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.models import SummaryTimeframe, Coin
-from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository, ArticleRepository
-from traitor.core.services.news_analysis_service import NewsAnalysisService
-from traitor.core.tools.ai import LLMGemini
-from traitor.core.config import container
+from traitor.core.data.repositories import CoinRepository, ArticleRepository
 from traitor.core.tools.ai.llm_tools import CoinStateTool
 
 

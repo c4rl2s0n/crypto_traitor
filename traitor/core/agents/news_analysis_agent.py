@@ -7,8 +7,6 @@ from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.models import SummaryTimeframe
 from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository
 from traitor.core.services.news_analysis_service import NewsAnalysisService
-from traitor.core.tools.ai import LLMGemini
-from traitor.core.config import container
 
 class NewsAnalysisAgent(AgentBase):
     name = "News Analysis"
@@ -18,9 +16,7 @@ class NewsAnalysisAgent(AgentBase):
     def __init__(self, interval = Provide["config.intervals.ANALYSIS"], model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):
         self.interval = interval
         self.coin_repo = CoinRepository()
-        self.analysis_repo = NewsAnalysisRepository()
-        
-        self.service = NewsAnalysisService(self.analysis_repo, model, prompts)
+        self.service = NewsAnalysisService(model, prompts)
         
         logging.info(f"Init NewsAnalysisAgent")
 

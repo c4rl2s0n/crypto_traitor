@@ -5,10 +5,9 @@ from dependency_injector.wiring import Provide, inject
 from requests import Response
 
 from traitor.core.data.models import *
-from traitor.core.research.market import *
 from traitor.core.research.market.crypto_info_api import CryptoInfoApi
 from traitor.core.research.market.exceptions import *
-from traitor.core.tools import api_bool, urljoin, strings_from_dict
+from traitor.core.tools.api import api_bool, urljoin, strings_from_dict
 
 
 class CoinGecko(CryptoInfoApi):

@@ -46,14 +46,14 @@ class Wallet(object):
 
     def add(self, coin_id: int, amount: float):
         if self.contains_coin(coin_id):
-            self.portfolio[coin_id] += amount
+            self.portfolio[coin_id].balance += amount
             self._update_coin(coin_id)
         else:
             logging.warn(f"Trying to add balance to wallet for unsupported coin ({coin_id})")
 
     def remove(self, coin_id: int, amount: float):
         if self.contains_coin(coin_id):
-            self.portfolio[coin_id] -= amount
+            self.portfolio[coin_id].balance -= amount
             self._update_coin(coin_id)
         else:
             logging.warn(f"Trying to remove balance from wallet for unsupported coin ({coin_id})")

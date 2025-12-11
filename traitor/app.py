@@ -75,24 +75,7 @@ def run():
     # set up the bot
     setup()
 
-    price_feature_extraction_agents = [
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
-        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.QUARTER, interval=relativedelta(days=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.MONTH, interval=relativedelta(hours=6)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
-        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
-    ]
-    agents: list[AgentBase] = [
-        TradingAgent(),
-        CoinSpottingAgent(),
-        PriceWatchAgent(),
-        NewsResearchAgent(),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        NewsAnalysisAgent(),
-    ]
-    agents.extend(price_feature_extraction_agents)
+    agents: list[AgentBase] = container.agents()
 
     # Create threads
     threads = [
