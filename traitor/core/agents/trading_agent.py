@@ -84,7 +84,8 @@ class TradingAgent(AgentBase):
                     TradingStrategyTool(),
                     TradingTool(self.paper_run),
                     CoinStateTool()
-                ]
+                ],
+                usage_comment="Trading",
             )
 
             return response_text

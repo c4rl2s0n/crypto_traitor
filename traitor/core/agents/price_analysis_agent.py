@@ -63,11 +63,14 @@ class PriceAnalysisAgent(AgentBase):
                     logging.debug(f"No features available for coin {coin.name}. Skipping analysis.")
                     continue
                 prompt = self._prepare_prompt(coin, coin_features)
-                response = self.model.process_text([prompt])
+                response = self.model.process_text(
+                    [prompt],
+                    usage_comment="Price Analysis",
+                )
                 analysis = PriceAnalysis(
                     coin_id=coin.id,
                     time=datetime.now(),
-                    analysis=response
+                    analysis=response,
                 )
                 self.price_analysis_repo.update(analysis)
         except Exception as e:

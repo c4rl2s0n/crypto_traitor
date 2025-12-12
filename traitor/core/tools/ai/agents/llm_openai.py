@@ -2,11 +2,11 @@ import json
 import logging
 import threading
 from datetime import datetime
-from typing import List, Union
+from typing import List
 
 from dependency_injector.wiring import inject, Provide
 from openai import OpenAI, omit
-from openai.types.responses import ResponseInputParam, EasyInputMessage, EasyInputMessageParam
+from openai.types.responses import ResponseInputParam, EasyInputMessageParam
 from openai.types.responses.response_input_param import FunctionCallOutput
 
 from traitor.core.data.models import TokenUsage
@@ -24,25 +24,29 @@ class LLMOpenAI(LLMAgent):
         super().__init__()
 
     def process_text(self, contents: List[str], prompt_cache_key: str | None = None, usage_comment: str | None = None) -> str:
-        response = self.client.responses.create(
-            model=self.model_name,
-            input=self._prepare_contents(contents),
-            prompt_cache_key=prompt_cache_key if prompt_cache_key is not None else omit,
-            service_tier="flex"
-        )
-        self.token_usage_repo.add(TokenUsage(
-            time=datetime.now(),
-            input_tokens=response.usage.input_tokens,
-            cached_tokens=response.usage.input_tokens_details.cached_tokens,
-            output_tokens=response.usage.output_tokens,
-            reasoning_tokens=response.usage.output_tokens_details.reasoning_tokens,
-            total_tokens=response.usage.total_tokens,
-            api=self.name,
-            agent=threading.current_thread().name,
-            model=self.model_name,
-            comment=usage_comment,
-        ))
-        return response.output_text
+        try:
+            response = self.client.responses.create(
+                model=self.model_name,
+                input=self._prepare_contents(contents),
+                prompt_cache_key=prompt_cache_key if prompt_cache_key is not None else omit,
+                service_tier="flex"
+            )
+            self.token_usage_repo.add(TokenUsage(
+                time=datetime.now(),
+                input_tokens=response.usage.input_tokens,
+                cached_tokens=response.usage.input_tokens_details.cached_tokens,
+                output_tokens=response.usage.output_tokens,
+                reasoning_tokens=response.usage.output_tokens_details.reasoning_tokens,
+                total_tokens=response.usage.total_tokens,
+                api=self.name,
+                agent=threading.current_thread().name,
+                model=self.model_name,
+                comment=usage_comment,
+            ))
+            return response.output_text
+        except:
+            logging.exception(f"ProcessText failed!\nContent:\n{self._prepare_contents(contents)}")
+            return "processing failed"
 
 
     def process_tooled(self, contents: List[str], tools: list[LLMTool] = None, prompt_cache_key: str | None = None, usage_comment: str | None = None) -> str:

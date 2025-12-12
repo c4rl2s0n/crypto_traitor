@@ -28,7 +28,7 @@ class ArticleRepository(Repository):
         with self.db.read_session() as s:
             q =s.query(Article).filter(Article.date_published >= start_date.date())
             if summarized_only:
-                q.filter(
+                q = q.filter(
                     Article.summary.isnot(None),
                     Article.summary != ""
                 )

@@ -1,6 +1,4 @@
 import logging
-from abc import ABC
-from typing import TypedDict
 
 from traitor.core.data.models import Coin
 from traitor.core.data.repositories import CoinRepository, PricesRepository
@@ -18,7 +16,7 @@ class Wallet(object):
 
     def portfolio_str(self) -> str:
         coins = self.coin_repo.get_by_ids(list(self.portfolio.keys()))
-        return dict_to_json({c.symbol:self.portfolio[c.id] for c in coins})
+        return dict_to_json({c.symbol:self.portfolio[c.id].balance for c in coins})
 
     def _update_coin(self, coin_id: int):
         if self.contains_coin(coin_id):

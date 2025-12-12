@@ -1,38 +1,11 @@
 from dependency_injector import containers, providers
 
-from traitor.core.agents import *
 from traitor.core.config.config import *
+from traitor.core.config.dependency_factories import *
 from traitor.core.data.db import Database
-from traitor.core.data.models import PriceFeatureInterval
 from traitor.core.research.market.apis import CoinGecko
 from traitor.core.research.market.apis.stealthexchange import StealthexApi
-from traitor.core.research.news import NewsSource
-from traitor.core.research.news.sources import CoinDesk, CryptoSlate
-from traitor.core.tools.ai import LLMOpenAI
 
-def agent_factory() -> list[AgentBase]:
-    price_feature_extraction_agents = [
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
-        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.QUARTER, interval=relativedelta(days=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.MONTH, interval=relativedelta(hours=6)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
-        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
-    ]
-    agents: list[AgentBase] = [
-        TradingAgent(),
-        CoinSpottingAgent(),
-        PriceWatchAgent(),
-        NewsResearchAgent(),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        NewsAnalysisAgent(),
-    ]
-    agents.extend(price_feature_extraction_agents)
-    return agents
-
-def news_source_factory() -> list[NewsSource]:
-    return [CoinDesk(), CryptoSlate()]
 
 class Container(containers.DynamicContainer):
     config = providers.Configuration()
@@ -41,13 +14,10 @@ class Container(containers.DynamicContainer):
     news_sources = providers.Factory(news_source_factory)
     crypto_info_api = providers.Factory(CoinGecko, api_key=config.api_keys.COINGECKO)
     crypto_exchange_api = providers.Factory(StealthexApi, api_key=config.api_keys.STEALTHEX)
-    summarize_agent_news = providers.Factory(LLMOpenAI, model='gpt-5-nano')
-    summarize_agent_prices = providers.Factory(LLMOpenAI, model='gpt-5-nano')
-    summarize_agent_market = providers.Factory(LLMOpenAI, model='gpt-5-nano')
-    trading_agent = providers.Factory(LLMOpenAI, model='gpt-5-mini')
-    # trading_agent = providers.Factory(LLMGemini, model='gemini-2.5-flash')
-    # summarize_agent_news = providers.Factory(LLMGemini, model='gemini-2.5-flash-lite')
-    # summarize_agent_prices = providers.Factory(LLMGemini, model='gemini-2.5-flash')
+    summarize_agent_news = providers.Factory(llm_factory_summarize_news, provider=llm_provider)
+    summarize_agent_prices = providers.Factory(llm_factory_summarize_prices, provider=llm_provider)
+    summarize_agent_market = providers.Factory(llm_factory_summarize_market, provider=llm_provider)
+    trading_agent = providers.Factory(llm_factory_trading, provider=llm_provider)
 
     def __init__(self):
         # load environment variables before registering dependencies

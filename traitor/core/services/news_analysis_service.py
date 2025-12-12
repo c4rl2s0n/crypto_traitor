@@ -68,7 +68,10 @@ class NewsAnalysisService:
             data_text="\n".join(relevant_data)
         )
         
-        meta_summary_text = self.llm.process_text([prompt])
+        meta_summary_text = self.llm.process_text(
+            [prompt],
+            usage_comment="News Analysis / Aggregation",
+        )
 
         summary_obj = CoinNewsSummary(
             coin_id=coin.id,

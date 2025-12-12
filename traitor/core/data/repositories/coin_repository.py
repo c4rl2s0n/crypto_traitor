@@ -86,7 +86,3 @@ class CoinRepository(Repository):
     def clear_balance(self):
         with self.db.write_session() as s:
             s.execute(update(Coin).values(balance=0))
-
-    def _trade_all(self):
-        with self.db.write_session() as s:
-            s.execute(update(Coin).values(can_trade=True))

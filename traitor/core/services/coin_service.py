@@ -21,6 +21,7 @@ class CoinService(object):
         if not force and self.coins_loaded():
             return self.coin_repo.get_all()
 
+
         # get list of available coins
         coins = self.crypto_info_api.get_coins()
         self.coin_repo.add_all(coins)

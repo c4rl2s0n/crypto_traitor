@@ -68,6 +68,7 @@ class StealthexApi(CryptoExchangeApi):
                         api_coin_id=api_coin_id,
                         api_name=self.name,
                     ))
+                    db_coin.can_trade = True
                     coins.add(db_coin)
                 self.coin_repo.update_all(db_coins)
 

@@ -1,5 +1,12 @@
+import enum
+
 from dateutil.relativedelta import relativedelta
 
+class LLMProvider(enum.Enum):
+    GEMINI = "Gemini"
+    OPENAI = "OpenAI"
+
+llm_provider = LLMProvider.OPENAI
 
 class PROMPTS:
     _summarize_news_early_and_bad = "traitor/core/assets/prompts/summarize_news.md"

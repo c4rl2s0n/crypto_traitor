@@ -15,8 +15,10 @@ class NewsSummarAIzer(object):
 
     def summarize_article(self, article: Article) -> str:
         return self.model.process_text([
-            open(self.prompts.summarize_news, "r").read(),
-            f"Current Date: {datetime.date.today()}",
-            str(article)
-        ])
+                open(self.prompts.summarize_news, "r").read(),
+                f"Current Date: {datetime.date.today()}",
+                str(article)
+            ],
+            usage_comment="Summarize News",
+        )
 

@@ -15,6 +15,7 @@ from traitor.core.data.models import PriceFeatureInterval
 from traitor.core.data.repositories import PriceFeatureRepository, ArticleRepository, CoinRepository
 from traitor.core.research.news import NewsSummarAIzer
 from traitor.core.services import CoinService, NewsResearchService
+from traitor.core.tools.ai import LLMOpenAI
 
 
 # TODO: Setup:
@@ -30,8 +31,6 @@ def setup():
     coin_repo = CoinRepository()
     coin_repo.clear_balance()
     # TODO: load real balances on start!
-    # TODO: remove this later
-    coin_repo._trade_all()
 
     # scan for coins
     coin_service = CoinService()
@@ -74,6 +73,9 @@ def run():
 
     # set up the bot
     setup()
+
+    llm = LLMOpenAI()
+    r = llm.process_text(["Say hello"])
 
     agents: list[AgentBase] = container.agents()
 

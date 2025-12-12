@@ -36,7 +36,7 @@ class LLMAgent(ABC):
         pass
 
     def ask_for_json(self, contents:List[str], prompt_cache_key: str | None = None, usage_comment: str | None = None) -> str:
-        response = self.process_text(contents, prompt_cache_key)
+        response = self.process_text(contents, prompt_cache_key, usage_comment)
         response = unwrap_md_json(response)
         try:
             json.loads(response)
@@ -44,6 +44,6 @@ class LLMAgent(ABC):
         except:
             logging.debug("Response was not JSON. Ask again!")
             contents.append("Your previous output was not valid json! Output only valid JSON, no markdown, no extra text, no comments!")
-            response = self.process_text(contents)
+            response = self.process_text(contents, prompt_cache_key, usage_comment+"_EnforceJson")
             response = unwrap_md_json(response)
         return response

@@ -49,6 +49,10 @@ class CoinSpottingAgent(AgentBase):
 
         articles = self.article_repo.get_in_range(start_date, summarized_only=True)
 
+        if len(articles) == 0:
+            logging.debug("No articles to analyze. Stop CoinSpotting for now...")
+            return
+
         article_strs: list[str] = []
         for article in articles:
             s = f"Date: {article.date_published}\n"
@@ -67,7 +71,8 @@ class CoinSpottingAgent(AgentBase):
 
         response = self.llm.process_tooled(
             contents=[prompt],
-            tools=[CoinStateTool()]
+            tools=[CoinStateTool()],
+            usage_comment="Coin Spotting",
         )
 
         logging.info(f"Spotting new Coins: {response}")
