@@ -39,11 +39,12 @@ def setup():
     if not coin_service.coins_loaded():
         coin_service.load_all_coins(force=True)
 
-    coins = coin_service.get_active_coins()
-    if len(coins) == 0:
-        coins = coin_service.get_coins_by_name(['Bitcoin', 'Zcash', 'Monero'])
-        for c in coins:
+    coins = coin_service.get_coins_by_name(['Bitcoin', 'Zcash', 'Monero', 'Solana', 'XRP', 'Ethereum', 'Tether', 'BNB', 'TRON', 'Litecoin'])
+    for c in coins:
+        if not c.active:
             coin_service.activate_coin(c)
+
+    coins = coin_service.get_active_coins()
     for coin in coins:
         coin_service.load_price_history(coin)
 

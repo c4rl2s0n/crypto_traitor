@@ -45,7 +45,7 @@ class NewsAnalysisService:
                         count += 1
                         
             except json.JSONDecodeError:
-                logging.warning(f"Could not parse JSON for article {article.id}")
+                logging.warning(f"Could not parse JSON for article {article.url}")
                 continue
 
         if not relevant_data:
