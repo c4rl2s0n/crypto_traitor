@@ -54,7 +54,7 @@ class CoinRepository(Repository):
                 .join(Coin.apis)
                 .filter(Coin.symbol.in_(symbols)))
             if active_only:
-                q.filter(Coin.active == True)
+                q = q.filter(Coin.active == True)
             return q.all()
 
     def get_by_names(self, names: list[str], active_only: bool = False) -> list[Coin]:
@@ -64,7 +64,7 @@ class CoinRepository(Repository):
                 .join(Coin.apis)
                 .filter(Coin.name.in_(names)))
             if active_only:
-                q.filter(Coin.active == True)
+                q = q.filter(Coin.active == True)
             return q.all()
 
     def get_by_symbol_and_name(self, symbol: str, name: str) -> list[Coin]:
