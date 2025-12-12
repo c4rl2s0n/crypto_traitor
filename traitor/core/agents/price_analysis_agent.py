@@ -75,12 +75,27 @@ class PriceAnalysisAgent(AgentBase):
 
 
     def _prepare_prompt(self, coin: Coin, features: dict[PriceFeatureInterval, PriceFeature]) -> str:
-        template = open(self.prompts.summarize_prices, "r").read()
-        template += f"Asset: {coin.name}\n\n"
-        template += f"Price Features:\n{_features_to_json(features)}\n"
-        prices_1h = self.price_repo.get_prices_dict([coin.id], start=datetime.now() - timedelta(hours=1))
-        template += "Market values in the last hour:\n"
-        for price in prices_1h:
-            template += f"- {price["time"].strftime("%Y-%m-%d %H:%M")}: {price["value"]}\n"
+        try:
+            with open(self.prompts.summarize_prices, "r") as f:
+                template = f.read()
+        except FileNotFoundError:
+            logging.error(f"Prompt file not found: {self.prompts.summarize_prices}")
+            return ""
 
-        return template
+        features_json_str = _features_to_json(features)
+        prices_1h = self.price_repo.get_prices_dict([coin.id], start=datetime.now() - timedelta(hours=1))
+        prices_str = "Last Hour Prices:\n"
+        if prices_1h:
+            for p in prices_1h:
+                t_str = p["time"].strftime("%H:%M")
+                val = p["value"]
+                prices_str += f"- {t_str}: {val}\n"
+        else:
+            prices_str += "No recent price data available.\n"
+
+        full_data_block = (
+            f"Asset: {coin.name}\n\n"
+            f"--- Computed Features ---\n{features_json_str}\n\n"
+            f"--- {prices_str}"
+        )
+        return template.format(price_features_json=full_data_block)

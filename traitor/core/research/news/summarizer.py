@@ -20,3 +20,20 @@ class NewsSummarAIzer(object):
             str(article)
         ])
 
+    def summarize_article(self, article: Article) -> str:
+        try:
+            with open(self.prompts.summarize_news, "r") as f:
+                template = f.read()
+        except FileNotFoundError:
+            return "Error: Prompt file not found."
+        
+        article_text = (
+            f"Date: {article.date_published}\n"
+            f"Title: {article.title}\n"
+            f"Body:\n{article.content}"
+        )
+        
+        final_prompt = template.format(content=article_text)
+
+        return self.model.process_text([final_prompt])
+

@@ -33,11 +33,8 @@ class NewsAnalysisService:
                 
                 assets = data.get("assets", [])
                 for asset in assets:
-                    ticker = asset.get("ticker") 
-                    #logging.info(f"DEBUG : ASSET {ticker}")
-                    #logging.info(f"DEBUG : COIN SYMBOL {coin.symbol}")
-                    #logging.info(f"DEBUG : COIN NAME {coin.name.lower()}")
-                    if asset.get("ticker").lower() == coin.symbol.lower() or coin.name.lower() in asset.get("ticker", "").lower():
+                    ticker = asset.get("ticker", "").lower()
+                    if ticker == coin.symbol.lower() or coin.name.lower() in ticker:
                         
                         relevant_data.append(f"- [{article.date_published}] Sentiment {asset['sentiment']}: {asset.get('reasoning')} (Event: {data.get('event_type')})")
                         
@@ -68,13 +65,14 @@ class NewsAnalysisService:
             data_text="\n".join(relevant_data)
         )
         
-        meta_summary_text = self.llm.process_text([prompt])
+        response_text = self.llm.process_text([prompt])
+        clean_json_text = response_text.replace("```json", "").replace("```", "").strip()
 
         summary_obj = CoinNewsSummary(
             coin_id=coin.id,
             timeframe=timeframe,
             sentiment_score=avg_sentiment,
-            content=meta_summary_text
+            content=clean_json_text 
         )
         self.news_analysis_repo.add(summary_obj)
         logging.info(f"Analysis saved for {coin.name}: Score {avg_sentiment}")
