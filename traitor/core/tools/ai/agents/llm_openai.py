@@ -93,6 +93,8 @@ class LLMOpenAI(LLMAgent):
             token_usage.reasoning_tokens += response.usage.output_tokens_details.reasoning_tokens
             token_usage.total_tokens += response.usage.total_tokens
 
+            llm_contents += response.output
+
             # Model will either return text or a tool call
             has_tool = False
             for output in response.output:

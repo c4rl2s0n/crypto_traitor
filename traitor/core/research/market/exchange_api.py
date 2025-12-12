@@ -28,4 +28,4 @@ class CryptoExchangeApi(CryptoApiBase, ABC):
 
         if out_id is None or in_id is None:
             return None
-        return self._get_exchange_rate(out_id, in_id, fixed)
+        return self._get_exchange_rate(out_id.api_coin_id, in_id.api_coin_id, fixed)
