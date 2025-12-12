@@ -13,6 +13,7 @@ from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepositor
 from traitor.core.tools.ai.llm_tools import ExchangeRateTool, TradingStrategyTool, CoinStateTool
 from traitor.core.tools.ai.llm_tools.trading import TradingTool
 from traitor.core.tools.trading.paper_run import PaperRun
+import json
 
 
 class TradingAgent(AgentBase):
@@ -115,21 +116,30 @@ class TradingAgent(AgentBase):
             logging.debug(f"Skipping {coin.name}: No Price Analysis found.")
             return None
 
-        # 1. Load the prompt from file
+        tech_score = "N/A"
+        try:
+            tech_data = json.loads(price_analysis.analysis)
+            tech_score = tech_data.get("technical_score", tech_data.get("score", "N/A"))
+        except Exception:
+            logging.warning(f"Could not parse technical score for {coin.name}")
+
         try:
             with open(self.prompts.asset_analysis, "r") as f:
                 template = f.read()
         except FileNotFoundError:
-            logging.error(f"Critical: Prompt file not found at {self.prompts.trading_strategy}")
+            logging.error(f"Critical: Prompt file not found at {self.prompts.asset_analysis}")
             return None
 
-        # 2. Fill the template
+        current_balance = self.paper_run.wallet.portfolio.get(coin.id, 0.0)
+
         prompt = template.format(
             coin_name=coin.name,
             coin_symbol=coin.symbol,
-            coin_price=latest_price.value,
-            coin_balance=self.paper_run.wallet.portfolio[coin.id],
+            coin_price=latest_price.value if latest_price else "Unknown",
+            coin_balance=current_balance,
+            
             sentiment_score=news_summary.sentiment_score,
+            technical_score=tech_score, 
             news_summary=news_summary.content,
             # Assume price_data.analysis is the text/json of the technical analysis
             price_analysis=price_analysis.analysis

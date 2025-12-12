@@ -1,14 +1,9 @@
-ASSET: 
-- Name: {coin_name} 
-- Symbol: {coin_symbol} 
-- Current Price: {coin_price}
-- Current Balance: {coin_balance}
+## ASSET: {coin_name} ({coin_symbol})
+- **Price:** {coin_price} | **Balance:** {coin_balance}
+- **Scores:** News({sentiment_score}) | Tech({technical_score})
 
-REPORT 1: FUNDAMENTAL ANALYSIS (News & Sentiment)
-Sentiment Score: {sentiment_score} (Scale -1 to 1)
-Summary:
+**[FUNDAMENTAL]**
 {news_summary}
 
-REPORT 2: TECHNICAL ANALYSIS (Price Action & Features)
-Technicals:
+**[TECHNICAL]**
 {price_analysis}
