@@ -19,7 +19,7 @@ class PaperRun(object):
         self.trade_log: list[TradingLog] = []
 
     def trade(self, coin_out: Coin, coin_in: Coin, balance_out: float, balance_in: float, reason: str|None = None) -> bool:
-        if not self.wallet.verify_trade(coin_out, coin_in, balance_out):
+        if not self.wallet.verify_trade(coin_out.id, coin_in.id, balance_out):
             logging.warn("Tried to perform invalid trade")
             return False
         coin_out_price = self.price_repo.get_last_price(coin_out.id)

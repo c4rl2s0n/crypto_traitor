@@ -173,7 +173,7 @@ class TradingAgent(AgentBase):
         history = self.trading_log_repo.get_latest(count)[::-1]
         if len(history) == 0:
             return "No trades have been performed yet."
-        result = "\n".join([h.to_string() for h in history])
+        result = "\n".join([h.to_string(with_comment=True) for h in history])
         if len(history) > count:
             result = f"(...)\n{result}"
         return result

@@ -61,7 +61,7 @@ class TradingTool(LLMTool):
                 or rate["max_amount"] is not None and rate["max_amount"] < amount_out):
             return f"Given amount ({amount_out}) is not in the required range [{rate["min_amount"], rate["max_amount"]}]"
 
-        self.network.trade(c_out, c_in, amount_out, amount_out * rate["rate"], reason)
-        return "Trade performed."
+        success = self.network.trade(c_out, c_in, amount_out, amount_out * rate["rate"], reason)
+        return "Trade performed." if success else "Failed to perform trade..."
 
 

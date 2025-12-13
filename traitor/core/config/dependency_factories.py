@@ -21,13 +21,13 @@ def agent_factory() -> list[AgentBase]:
     ]
     agents: list[AgentBase] = [
         TradingAgent(),
-        CoinSpottingAgent(),
-        PriceWatchAgent(),
-        NewsResearchAgent(),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
-        NewsAnalysisAgent(),
+        # CoinSpottingAgent(),
+        # PriceWatchAgent(),
+        # NewsResearchAgent(),
+        # PriceAnalysisAgent(interval=relativedelta(minutes=5)),
+        # NewsAnalysisAgent(),
     ]
-    agents.extend(price_feature_extraction_agents)
+    # agents.extend(price_feature_extraction_agents)
     return agents
 
 def news_source_factory() -> list[NewsSource]:
