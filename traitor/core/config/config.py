@@ -78,9 +78,9 @@ class PROMPTS:
 
 class INTERVALS:
     price_watch = relativedelta(minutes=3)
-    price_analysis = relativedelta(minutes=10)
+    price_analysis = relativedelta(minutes=30)
     news = relativedelta(hours=1)
-    trading = relativedelta(minutes=15)
+    trading = relativedelta(minutes=30)
     news_analysis = relativedelta(hours=1)
     coin_spotting = relativedelta(hours=1)
 

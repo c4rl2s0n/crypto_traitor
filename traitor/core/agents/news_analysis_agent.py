@@ -10,7 +10,7 @@ from traitor.core.services.news_analysis_service import NewsAnalysisService
 
 class NewsAnalysisAgent(AgentBase):
     name = "News Analysis"
-    interval = timedelta(hours=1) 
+    initial_delay = timedelta(minutes=5)
 
     @inject
     def __init__(self, interval = Provide["config.intervals.NEWS_ANALYSIS"], model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):

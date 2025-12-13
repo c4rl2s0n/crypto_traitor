@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TypedDict
 
 from dateutil.relativedelta import relativedelta
@@ -19,6 +19,7 @@ from traitor.core.tools.trading.paper_run import PaperRun
 
 class TradingAgent(AgentBase):
     name = "Trading Desk"
+    initial_delay = timedelta(minutes=5)
 
     @inject
     def __init__(self, interval: relativedelta = Provide["config.intervals.TRADING"], model: LLMAgent = Provide["trading_agent"], prompts = Provide["prompts"]):
@@ -35,7 +36,7 @@ class TradingAgent(AgentBase):
 
         self.paper_run = PaperRun()
 
-        logging.info(f"Init TradingAgent: Ready to merge intelligence.\n\t{self.paper_run.wallet.portfolio_str()}")
+        logging.info(f"Init TradingAgent: Ready to merge intelligence.\n{self.paper_run.wallet.portfolio_str()}\nTotal value: {self.paper_run.wallet.total_value()}")
 
     def _do_task(self):
         logging.info("Evaluating trading opportunities (News + Price)...")
@@ -72,7 +73,7 @@ class TradingAgent(AgentBase):
         prompt = template.format(
             coin_analysis="\n---\n".join(coin_analysis),
             date=datetime.now().strftime("%Y-%m-%d %H:%M"),
-            strategy_history=self._get_strategy_history(5),
+            strategy_history=self._get_strategy_history(1),
             trading_history=self._get_trading_history(5),
         )
         logging.debug(f"Final Prompt:\n{prompt}")

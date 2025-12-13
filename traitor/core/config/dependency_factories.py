@@ -23,8 +23,8 @@ def agent_factory() -> list[AgentBase]:
         TradingAgent(),
         CoinSpottingAgent(),
         PriceWatchAgent(),
+        PriceAnalysisAgent(),
         NewsResearchAgent(),
-        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
         NewsAnalysisAgent(),
     ]
     agents.extend(price_feature_extraction_agents)

@@ -38,10 +38,9 @@ def _features_to_json(features: dict[PriceFeatureInterval, PriceFeature]) -> str
 
 class PriceAnalysisAgent(AgentBase):
     name = "Price Analysis"
-    interval = timedelta(minutes=5)
 
     @inject
-    def __init__(self, interval: relativedelta = Provide["config.intervals.PRICES"], model: LLMAgent = Provide["summarize_agent_prices"], prompts = Provide["prompts"]):
+    def __init__(self, interval: relativedelta = Provide["config.intervals.PRICE_ANALYSIS"], model: LLMAgent = Provide["summarize_agent_prices"], prompts = Provide["prompts"]):
         self.interval = interval
         self.prompts = prompts
         self.model = model
