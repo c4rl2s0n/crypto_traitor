@@ -19,8 +19,8 @@ You don't need to output any text. Just use the provided tools to
 You don't need to perform any action, you will be prompted repeatedly, so it is also fine to hold the portfolio as it is and wait.
 
 ---
-# Trading Strategy
-{trading_strategy}
+# Trading Strategy History
+{strategy_history}
 
 ---
 # Trading History

@@ -16,7 +16,7 @@ class PROMPTS:
     _price_analysis = "traitor/core/assets/prompts/price_analysis.md"
     _news_analysis = "traitor/core/assets/prompts/news_analysis.md"
     _coin_spotting = "traitor/core/assets/prompts/coin_spotting.md"
-    _trading_strategy = "traitor/core/assets/prompts/trading_strategy.md"
+    _trading = "traitor/core/assets/prompts/trading.md"
     _asset_analysis = "traitor/core/assets/prompts/asset_analysis.md"
 
     _news_aggregation = "traitor/core/assets/prompts/news_aggregation.md"
@@ -64,8 +64,8 @@ class PROMPTS:
         return self._asset_analysis
 
     @property
-    def trading_strategy(self):
-        return self._trading_strategy
+    def trading(self):
+        return self._trading
 
     @property
     def combine_prices_news(self):
@@ -77,10 +77,13 @@ class PROMPTS:
 
 
 class INTERVALS:
-    price_watch = relativedelta(minutes=5)
+    price_watch = relativedelta(minutes=3)
+    price_analysis = relativedelta(minutes=10)
     news = relativedelta(hours=1)
     trading = relativedelta(minutes=15)
-    analysis=relativedelta(hours=1)
+    news_analysis = relativedelta(hours=1)
+    coin_spotting = relativedelta(hours=1)
 
 class DBViews:
     daily_ohlc = "daily_ohlc"
+    token_usage_grouped = "token_usage_grouped"

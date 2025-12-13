@@ -1,7 +1,4 @@
-from sqlalchemy import or_, desc
-
 from traitor.core.data.models import TradingStrategy
-from traitor.core.data.models.article import Article
 from traitor.core.data.repositories.repository import Repository
 
 
@@ -9,9 +6,8 @@ class TradingStrategyRepository(Repository):
     def __init__(self):
         super().__init__(model=TradingStrategy)
 
-    def get_latest(self) -> TradingStrategy | None:
+    def get_latest(self, count: int = 1) -> list[TradingStrategy]:
+        if count <= 0:
+            return []
         with self.db.read_session() as s:
-            result = s.query(TradingStrategy).order_by(desc(TradingStrategy.time)).limit(1).all()
-            if len(result) == 0:
-                return None
-            return result[0]
+            return s.query(TradingStrategy).order_by(TradingStrategy.time.desc()).limit(count).all()

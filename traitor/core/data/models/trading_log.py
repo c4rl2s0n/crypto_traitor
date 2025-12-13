@@ -18,5 +18,9 @@ class TradingLog(Base):
     coin_in_value = Column(Float, nullable=True)
     comment = Column(String, nullable=True)
 
-    def to_string(self) -> str:
-        return f"[{self.time}] {self.balance_out} {self.coin_out_name} ({self.coin_out_value}) <--> {self.balance_in} {self.coin_in_name} ({self.coin_in_value})"
+    def to_string(self, with_time: bool = True) -> str:
+        s = ""
+        if with_time:
+            s += f"[{self.time}] "
+        s += f"{self.balance_out} {self.coin_out_name} ({self.coin_out_value}) -out->> <<-in- {self.balance_in} {self.coin_in_name} ({self.coin_in_value})"
+        return s

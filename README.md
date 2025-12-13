@@ -47,18 +47,6 @@ One day, this shall become an AI powered bot for trading crypto currencies.
 There is no strict style, but using strong typing would be appreciated to catch type-errors early.
 Also try to keep things modular to facilitate maintenance and extension.
 
-## TODO
-- Code structure (modular)
-  - what can be generalized?
-    - LLM Interface
-    - Scraper interface
-- Refine prompts
-  - currently the LLM labeled weird things as assets
-    - maybe create a list of currencies to take into account
-    - when LLM finds 'new' coins, it can ask to include them into the list. A user will have to accept that
-    - prompt should contain a list of known/accepted coins which can be considered 'assets'
-  - how to summarize market values?
-
 ## Lifecycle
 The Lifecycle of the bot consists of several threads that serve different purposes.
 Each thread runs in its own interval (e.g. scrape news once every hour)
@@ -183,7 +171,7 @@ The UI is considered nice-to-have, but actually has no real priority before the 
     "last_4_weeks_commit_activity_series": []
   }
 - Get continuous information about coins:
-  - daily OHCL
+  - daily OHCL (can be derived from collected prices)
   - market_cap_rank
   - 24h high / low
   - current price (scrape in regular intervals, maybe use other API if rate limit becomes a problem)
@@ -199,6 +187,19 @@ The UI is considered nice-to-have, but actually has no real priority before the 
       - could be useful to automatically send transactions
       - should work at least for ethereum (or all ether-based chains?)
       - https://developer.metamask.io/key/active-endpoints
+
+
+### Potential improvements
+- coin-specific news-analysis could be performed on a daily basis using Batch API
+  - instead of filtering the articles by asset, just prompt all articles of a day for each coin in a batch
+    1. make use of prompt caching -> cheaper tokens
+    2. all articles get reflected in the summary for every asset
+    3. would probably scale better than having different queries for every asset
+    4. _but_: need to check how many article summaries we can actually put in a prompt... if number of sources increases, the number of articles per day could rise!
+        - alternatively, these batches could be created like every 6 hours or something (?)
+  - Batch API needs up to 24h to complete, but reduces token price by 50%
+    - news summary (maybe) does not have to be that 'live'
+- keep a log for coinspotting
 
 # NOTES
 - due to tsfresh-dependencies, python version >= 3.14 are not supported (because of numba package)

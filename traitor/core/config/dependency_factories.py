@@ -1,5 +1,3 @@
-import enum
-
 from dateutil.relativedelta import relativedelta
 
 from traitor.core.agents import AgentBase, PriceFeatureExtractionAgent, TradingAgent, CoinSpottingAgent, PriceWatchAgent, \
@@ -26,7 +24,7 @@ def agent_factory() -> list[AgentBase]:
         CoinSpottingAgent(),
         PriceWatchAgent(),
         NewsResearchAgent(),
-        PriceAnalysisAgent(interval=relativedelta(minutes=3)),
+        PriceAnalysisAgent(interval=relativedelta(minutes=5)),
         NewsAnalysisAgent(),
     ]
     agents.extend(price_feature_extraction_agents)

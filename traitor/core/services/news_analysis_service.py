@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from traitor.core.config.config import PROMPTS
 from traitor.core.data.models import Coin, CoinNewsSummary, SummaryTimeframe
 from traitor.core.data.repositories import NewsAnalysisRepository, ArticleRepository
-from traitor.core.tools import LLMAgent
+from traitor.core.tools.ai import LLMAgent
 
 
 class NewsAnalysisService:
@@ -26,6 +26,7 @@ class NewsAnalysisService:
         total_sentiment = 0.0
         count = 0
 
+        # TODO: maybe, instead of parsing json, we can just pass all the summaries to the LLM and use cached prompts for all the coins?
         for article in articles:
             try:
                 raw_json = article.summary.replace("```json", "").replace("```", "").strip()

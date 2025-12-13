@@ -1,8 +1,8 @@
-from datetime import datetime
+from dependency_injector.wiring import inject, Provide
 
-from traitor.core.data.models import TradingStrategy, Coin
-from traitor.core.data.repositories import TradingStrategyRepository, CoinRepository
+from traitor.core.data.repositories import CoinRepository
 from traitor.core.research.market.exchange_api import CryptoExchangeApi
+from traitor.core.tools import dict_to_json
 from traitor.core.tools.ai.llm_tools.llm_tool import LLMTool
 
 
@@ -27,15 +27,19 @@ class ExchangeRateTool(LLMTool):
         },
         "required": ["coin_out", "coin_in"],
     }
-    def __init__(self, api: CryptoExchangeApi):
-        self.api = api
+    @inject
+    def __init__(self, crypto_exchange_api: CryptoExchangeApi = Provide["crypto_exchange_api"]):
+        self.api = crypto_exchange_api
         self.coin_repo = CoinRepository()
 
-    def execute(self, coin_out: str, coin_in: str, fixed: bool = False) -> float | str:
+    def execute(self, coin_out: str, coin_in: str, fixed: bool = False) -> str:
         c_out = self.coin_repo.try_get(coin_out, active_only=True)
         c_in = self.coin_repo.try_get(coin_in, active_only=True)
         if c_out is None:
             return f"No coin found with name or symbol {coin_out}"
         if c_in is None:
             return f"No coin found with name or symbol {coin_in}"
-        return self.api.get_exchange_rate(c_out, c_in, fixed)
+        result = self.api.get_exchange_rate(c_out, c_in, fixed)
+        if result is None:
+            return "Could not retrieve exchange rate"
+        return dict_to_json(result)

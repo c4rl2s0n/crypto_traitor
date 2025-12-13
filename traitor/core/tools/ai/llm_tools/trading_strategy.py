@@ -7,7 +7,7 @@ from traitor.core.tools.ai.llm_tools.llm_tool import LLMTool
 
 class TradingStrategyTool(LLMTool):
     name: str = "set_trading_strategy"
-    description: str ="A tool to change the current trading strategy."
+    description: str ="A tool to change the current trading strategy. Keep strategy and reason short, concise and informative, so that it helps to perform consistent consecutive trades."
     parameters: dict[str, str] = {
         "type": "object",
         "properties": {

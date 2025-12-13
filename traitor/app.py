@@ -67,16 +67,20 @@ def run():
         traitor.core.agents,
         traitor.core.services,
         traitor.core.research,
+        traitor.core.research.market.apis,
         traitor.core.data,
         traitor.core.tools,
         traitor.core.tools.ai,
+        traitor.core.tools.ai.llm_tools,
     ])
+
+    # llm = LLMOpenAI()
+    # r = llm.process_text(["Say hello"])
+    # if "failed" in r:
+    #     raise Exception("FAILED TO CONNECT TO LLM! ABORT!")
 
     # set up the bot
     setup()
-
-    llm = LLMOpenAI()
-    r = llm.process_text(["Say hello"])
 
     agents: list[AgentBase] = container.agents()
 

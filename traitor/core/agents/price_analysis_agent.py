@@ -8,7 +8,8 @@ from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.models import PriceFeatureInterval, Coin, PriceFeature, PriceAnalysis
 from traitor.core.data.repositories import CoinRepository, PriceFeatureRepository, PriceAnalysisRepository, \
     PricesRepository
-from traitor.core.tools import LLMAgent, dict_to_json
+from traitor.core.tools.ai import LLMAgent
+from traitor.core.tools import dict_to_json
 
 
 def _features_to_json(features: dict[PriceFeatureInterval, PriceFeature]) -> str:

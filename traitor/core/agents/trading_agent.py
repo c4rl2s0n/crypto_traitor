@@ -1,13 +1,15 @@
 import logging
 from datetime import datetime
+from typing import TypedDict
 
 from dateutil.relativedelta import relativedelta
 from dependency_injector.wiring import inject, Provide
 
 from traitor.core.agents.agent_base import AgentBase
-from traitor.core.data.models import Coin, SummaryTimeframe
+from traitor.core.data.models import Coin, SummaryTimeframe, TradingStrategy
 from traitor.core.research.market.apis.stealthexchange import StealthexApi
-from traitor.core.tools import LLMAgent
+from traitor.core.tools.ai import LLMAgent
+from traitor.core.tools import time_to_str
 from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository, PriceAnalysisRepository, \
     TradingStrategyRepository, PricesRepository, TradingLogRepository
 from traitor.core.tools.ai.llm_tools import ExchangeRateTool, TradingStrategyTool, CoinStateTool
@@ -60,18 +62,18 @@ class TradingAgent(AgentBase):
 
         # 1. Load the prompt from file
         try:
-            with open(self.prompts.trading_strategy, "r") as f:
+            with open(self.prompts.trading, "r") as f:
                 template = f.read()
         except FileNotFoundError:
-            logging.error(f"Critical: Prompt file not found at {self.prompts.trading_strategy}")
+            logging.error(f"Critical: Prompt file not found at {self.prompts.trading}")
             return ""
 
         # 2. Fill the template
         prompt = template.format(
             coin_analysis="\n---\n".join(coin_analysis),
             date=datetime.now().strftime("%Y-%m-%d %H:%M"),
-            trading_strategy=self._get_strategy(),
-            trading_history=self._get_trading_history(5)
+            strategy_history=self._get_strategy_history(5),
+            trading_history=self._get_trading_history(5),
         )
         logging.debug(f"Final Prompt:\n{prompt}")
 
@@ -80,7 +82,7 @@ class TradingAgent(AgentBase):
             response_text = self.llm.process_tooled(
                 contents=[prompt],
                 tools=[
-                    ExchangeRateTool(StealthexApi()),
+                    ExchangeRateTool(),
                     TradingStrategyTool(),
                     TradingTool(self.paper_run),
                     CoinStateTool()
@@ -121,7 +123,7 @@ class TradingAgent(AgentBase):
             with open(self.prompts.asset_analysis, "r") as f:
                 template = f.read()
         except FileNotFoundError:
-            logging.error(f"Critical: Prompt file not found at {self.prompts.trading_strategy}")
+            logging.error(f"Critical: Prompt file not found at {self.prompts.trading}")
             return None
 
         # 2. Fill the template
@@ -129,7 +131,7 @@ class TradingAgent(AgentBase):
             coin_name=coin.name,
             coin_symbol=coin.symbol,
             coin_price=latest_price.value,
-            coin_balance=self.paper_run.wallet.portfolio[coin.id],
+            coin_balance=coin.balance,
             sentiment_score=news_summary.sentiment_score,
             news_summary=news_summary.content,
             # Assume price_data.analysis is the text/json of the technical analysis
@@ -137,14 +139,47 @@ class TradingAgent(AgentBase):
         )
         return prompt
 
-    def _get_strategy(self) -> str:
-        strategy = self.trading_strategy_repo.get_latest()
-        if strategy is None:
-            strategy = "No strategy yet. Define your strategy to perform consistent trading."
-        return strategy
+    def _get_history(self, length: int = 10) -> str:
+        strategies = self.trading_strategy_repo.get_latest(length)[::-1]
+        if len(strategies) == 0:
+            strategies.append(TradingStrategy(strategy="No strategy yet. Define your strategy to perform consistent trading.", time=datetime.now()))
+        trading_history = self.trading_log_repo.get_latest(length)[::-1]
+        history: list[HistoryEntry] = []
+        for s in strategies:
+            history.append({"time": s.time, "type": "Trading Strategy", "content": s.to_string(with_time=False)})
+        for t in trading_history:
+            history.append({"time": t.time, "type": "Trade", "content": t.to_string(with_time=False)})
 
-    def _get_trading_history(self, count: int) -> str:
+        history = sorted(history, key=lambda x: x["time"])[:length]
+        if len(history) > length and "Strategy:" not in "".join([h["content"] for h in history]) and len(strategies) > 0:
+            strategy = strategies[-1]
+            history[0] = {"time": strategy.time, "type": "Trading Strategy", "content": strategy.to_string(with_time=False)}
+        result = "\n".join([f"[{time_to_str(h["time"])}] {h["type"]}\n{h["content"]}" for h in history])
+        if len(history) > length:
+            result = "(...)\n" + result
+        return result
+
+
+    def _get_strategy_history(self, count: int = 1) -> str:
+        strategies = self.trading_strategy_repo.get_latest(count)[::-1]
+        if len(strategies) == 0:
+            strategies.append(TradingStrategy(strategy="No strategy yet. Define your strategy to perform consistent trading.", time=datetime.now()))
+        result = "\n".join([s.to_string() for s in strategies])
+        if len(strategies) > count:
+            result = f"(...)\n{result}"
+        return result
+
+    def _get_trading_history(self, count: int = 1) -> str:
         history = self.trading_log_repo.get_latest(count)[::-1]
         if len(history) == 0:
             return "No trades have been performed yet."
-        return "\n".join([h.to_string() for h in history])
+        result = "\n".join([h.to_string() for h in history])
+        if len(history) > count:
+            result = f"(...)\n{result}"
+        return result
+
+
+class HistoryEntry(TypedDict):
+    time: datetime
+    type: str
+    content: str

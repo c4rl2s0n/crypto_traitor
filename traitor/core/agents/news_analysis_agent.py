@@ -13,7 +13,7 @@ class NewsAnalysisAgent(AgentBase):
     interval = timedelta(hours=1) 
 
     @inject
-    def __init__(self, interval = Provide["config.intervals.ANALYSIS"], model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):
+    def __init__(self, interval = Provide["config.intervals.NEWS_ANALYSIS"], model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):
         self.interval = interval
         self.coin_repo = CoinRepository()
         self.service = NewsAnalysisService(model, prompts)

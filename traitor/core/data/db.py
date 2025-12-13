@@ -75,6 +75,9 @@ class Database(object):
                 logging.exception("failed to create hypertables")
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_coin_id_time ON prices(coin_id, time DESC);"))
 
+        self._create_views()
+
+    def _create_views(self):
         with self.engine.connect() as conn:
             conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(
                 f"""CREATE MATERIALIZED VIEW IF NOT EXISTS {DBViews.daily_ohlc}
@@ -89,6 +92,20 @@ class Database(object):
                         LAST("value", "time") AS close
                     FROM prices
                     GROUP BY coin_id, coin_symbol, time_bucket('1 day', "time");
+                    """))
+        with self.engine.connect() as conn:
+            conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(
+                f"""CREATE OR REPLACE VIEW {DBViews.token_usage_grouped} AS
+                    SELECT 
+                        Date(time) as day,
+                        Sum(input_tokens) as token_in, 
+                        Sum(output_tokens) as token_out, 
+                        Sum(reasoning_tokens) as token_reason, 
+                        Sum(total_tokens) as token_usage, 
+                        api, agent 
+                    FROM public.token_usage
+                    Group By api, agent, day
+                    Order By day desc, token_usage desc;
                     """))
 
     def _delete_database(self):

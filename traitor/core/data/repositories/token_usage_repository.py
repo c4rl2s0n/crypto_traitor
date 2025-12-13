@@ -1,6 +1,4 @@
-from sqlalchemy import desc
-
-from traitor.core.data.models import TradingStrategy, TokenUsage
+from traitor.core.data.models import TokenUsage
 from traitor.core.data.repositories.repository import Repository
 
 

@@ -5,13 +5,12 @@ from requests import Response
 
 from traitor.core.data.models import Coin, ApiCoinID
 from traitor.core.data.repositories import CoinRepository
-from traitor.core.research.market.exchange_api import CryptoExchangeApi
+from traitor.core.research.market.exchange_api import CryptoExchangeApi, ExchangeVolumeBounds
 from traitor.core.tools.api import urljoin
 from traitor.core.tools.misc import dict_to_json
 
 
 class StealthexApi(CryptoExchangeApi):
-
     name = "StealthEx"
     base_url = "https://api.stealthex.io/v4"
 
@@ -20,6 +19,7 @@ class StealthexApi(CryptoExchangeApi):
     apis = {
         "coins": "currencies",
         "exchange_rates": "rates/estimated-amount",
+        "exchange_volume_bounds": "rates/range",
     }
 
     @inject
@@ -31,7 +31,7 @@ class StealthexApi(CryptoExchangeApi):
         header = {
             "Authorization": f"Bearer {self.api_key}",
         }
-        if api.startswith(self.apis["exchange_rates"]):
+        if api == self.apis["exchange_rates"] or api == self.apis["exchange_volume_bounds"]:
             header["Content-Type"] = "application/json"
 
         return header
@@ -101,4 +101,28 @@ class StealthexApi(CryptoExchangeApi):
             return None
         response = json.loads(r.text)
         return response["estimated_amount"]
+
+
+    def _get_exchange_volume_bounds(self, out_id: str, in_id: str, fixed: bool) -> ExchangeVolumeBounds | None:
+        api = self.apis["exchange_volume_bounds"]
+
+        post_data = {
+            "route": {
+                "from": {
+                    "symbol": out_id,
+                    "network": "mainnet"
+                },
+                "to": {
+                    "symbol": in_id,
+                    "network": "mainnet"
+                }
+            },
+            "estimation": "direct",
+            "rate": "fixed" if fixed else "floating",
+        }
+        r = self._request_post(api, dict_to_json(post_data))
+        if r.status_code != 200:
+            return None
+        response = json.loads(r.text)
+        return response
 

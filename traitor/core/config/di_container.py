@@ -48,13 +48,16 @@ class Container(containers.DynamicContainer):
             f"postgresql+psycopg2://{db.USER()}:{db.PASSWORD()}@{db.URL()}:{db.PORT()}/{db.NAME()}")
 
         # configure gemini api
-        import google.generativeai as genai
-        genai.configure(api_key=self.config.api_keys.GEMINI())
+        if llm_provider == LLMProvider.GEMINI:
+            import google.generativeai as genai
+            genai.configure(api_key=self.config.api_keys.GEMINI())
 
         self.config.intervals.PRICE_WATCH.from_value(INTERVALS.price_watch)
+        self.config.intervals.PRICE_ANALYSIS.from_value(INTERVALS.price_analysis)
         self.config.intervals.NEWS.from_value(INTERVALS.news)
         self.config.intervals.TRADING.from_value(INTERVALS.trading)
-        self.config.intervals.ANALYSIS.from_value(INTERVALS.analysis)
+        self.config.intervals.NEWS_ANALYSIS.from_value(INTERVALS.news_analysis)
+        self.config.intervals.COIN_SPOTTING.from_value(INTERVALS.coin_spotting)
 
 
 
