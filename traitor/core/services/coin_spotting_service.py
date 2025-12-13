@@ -3,39 +3,20 @@ from datetime import timedelta, datetime
 
 from dependency_injector.wiring import inject, Provide
 
-from traitor.core.agents.agent_base import AgentBase
-from traitor.core.data.models import SummaryTimeframe, Coin
+from traitor.core.data.models import Coin, SummaryTimeframe
 from traitor.core.data.repositories import CoinRepository, ArticleRepository
 from traitor.core.tools.ai.llm_tools import CoinStateTool
 
 
-class CoinSpottingAgent(AgentBase):
-    name = "Coin Spotting"
-    interval = timedelta(days=1)
-
+class CoinSpottingService(object):
     @inject
-    def __init__(self, interval = Provide["config.intervals.COIN_SPOTTING"], model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):
-        self.interval = interval
+    def __init__(self, model = Provide["summarize_agent_market"], prompts = Provide["prompts"]):
         self.llm = model
         self.prompts = prompts
 
-        self.article_repo = ArticleRepository()
-        self.coin_repo = CoinRepository()
-
-        logging.info(f"Init CoinSpottingAgent")
-
-    def _do_task(self):
-        logging.info("Looking for new coins...")
-        active_coins = self.coin_repo.get_active()
-        try:
-            self.spot_new_coins(active_coins, SummaryTimeframe.DAY)
-        except Exception as e:
-            logging.exception(f"Error while spotting new coins...")
-
-
-
-
-    def spot_new_coins(self, active_coins: list[Coin], timeframe: SummaryTimeframe):
+    def spot_new_coins(self, active_coins: list[Coin] = None, timeframe: SummaryTimeframe = SummaryTimeframe.DAY):
+        if active_coins is None:
+            active_coins = CoinRepository().get_active()
         logging.info(f"Looking for new coins over last {timeframe}...")
         days_back = timeframe.value
         start_date = datetime.today() - timedelta(days=days_back)
@@ -47,7 +28,7 @@ class CoinSpottingAgent(AgentBase):
             logging.error(f"Prompt file not found: {self.prompts.summarize_news_summaries}")
             return
 
-        articles = self.article_repo.get_in_range(start_date, summarized_only=True)
+        articles = ArticleRepository().get_in_range(start_date, summarized_only=True)
 
         if len(articles) == 0:
             logging.debug("No articles to analyze. Stop CoinSpotting for now...")

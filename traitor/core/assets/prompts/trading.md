@@ -8,6 +8,8 @@ Synthesize both reports. Look for confluence (both agree) or divergence (news sa
 - If News is neutral but Price shows a breakout, follow the price.
 - If both are aligned, High Confidence.
 - You can only use the assets listed above!
+- Take into account recent trades and the current trading strategy!
+- Only update the trading strategy when you feel it needs to be adjusted.
 
 ---
 # OUTPUT:

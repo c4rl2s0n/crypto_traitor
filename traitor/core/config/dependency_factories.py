@@ -1,7 +1,6 @@
 from dateutil.relativedelta import relativedelta
 
-from traitor.core.agents import AgentBase, PriceFeatureExtractionAgent, TradingAgent, CoinSpottingAgent, PriceWatchAgent, \
-    NewsResearchAgent, PriceAnalysisAgent, NewsAnalysisAgent
+from traitor.core.agents import AgentBase, TradingAgent, PriceWatchAgent,  NewsAnalysisAgent, NewsWatchAgent
 from traitor.core.config import LLMProvider
 from traitor.core.data.models import PriceFeatureInterval
 from traitor.core.research.news import NewsSource
@@ -10,25 +9,22 @@ from traitor.core.tools.ai import LLMGemini, LLMOpenAI
 
 
 def agent_factory() -> list[AgentBase]:
-    price_feature_extraction_agents = [
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.ALL, interval=relativedelta(days=3)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.YEAR, interval=relativedelta(days=1)),
-        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.QUARTER, interval=relativedelta(days=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.MONTH, interval=relativedelta(hours=6)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.WEEK, interval=relativedelta(hours=1)),
-        PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.DAY, interval=relativedelta(minutes=15)),
-        # PriceFeatureExtractionAgent(feature_interval=PriceFeatureInterval.HOUR, interval=relativedelta(minutes=5)),
-    ]
     agents: list[AgentBase] = [
         TradingAgent(),
-        CoinSpottingAgent(),
         PriceWatchAgent(),
-        PriceAnalysisAgent(),
-        NewsResearchAgent(),
+        NewsWatchAgent(),
         NewsAnalysisAgent(),
     ]
-    agents.extend(price_feature_extraction_agents)
     return agents
+
+def price_feature_interval_factory() -> list[PriceFeatureInterval]:
+    return [
+        PriceFeatureInterval.ALL,
+        PriceFeatureInterval.YEAR,
+        PriceFeatureInterval.MONTH,
+        PriceFeatureInterval.WEEK,
+        PriceFeatureInterval.DAY,
+    ]
 
 def news_source_factory() -> list[NewsSource]:
     return [CoinDesk(), CryptoSlate()]

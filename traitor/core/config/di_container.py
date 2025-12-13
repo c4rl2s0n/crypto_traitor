@@ -12,6 +12,7 @@ class Container(containers.DynamicContainer):
     prompts = providers.ThreadSafeSingleton(PROMPTS)
     agents = providers.Singleton(agent_factory)
     news_sources = providers.Factory(news_source_factory)
+    price_feature_intervals = providers.Factory(price_feature_interval_factory)
     crypto_info_api = providers.Factory(CoinGecko, api_key=config.api_keys.COINGECKO)
     crypto_exchange_api = providers.Factory(StealthexApi, api_key=config.api_keys.STEALTHEX)
     summarize_agent_news = providers.Factory(llm_factory_summarize_news, provider=llm_provider)
@@ -53,11 +54,9 @@ class Container(containers.DynamicContainer):
             genai.configure(api_key=self.config.api_keys.GEMINI())
 
         self.config.intervals.PRICE_WATCH.from_value(INTERVALS.price_watch)
-        self.config.intervals.PRICE_ANALYSIS.from_value(INTERVALS.price_analysis)
-        self.config.intervals.NEWS.from_value(INTERVALS.news)
+        self.config.intervals.NEWS_WATCH.from_value(INTERVALS.news_watch)
         self.config.intervals.TRADING.from_value(INTERVALS.trading)
         self.config.intervals.NEWS_ANALYSIS.from_value(INTERVALS.news_analysis)
-        self.config.intervals.COIN_SPOTTING.from_value(INTERVALS.coin_spotting)
 
 
 

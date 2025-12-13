@@ -8,7 +8,7 @@ from traitor.core.tools.ai.llm_tools.llm_tool import LLMTool
 
 class CoinStateTool(LLMTool):
     name: str = "set_coin_state"
-    description: str ="A tool to change the state of a coin. Coins can be activated to take them into account for trading or deactivated to ignore them."
+    description: str ="A tool to change the state of a coin. Coins can be activated to take them into account for trading or deactivated to ignore them. The coin will NOT be activated automatically. A note is created and a human will have to verify the activation."
     parameters: dict[str, str] = {
         "type": "object",
         "properties": {

@@ -8,6 +8,7 @@ from dependency_injector.wiring import inject, Provide
 from traitor.core.agents.agent_base import AgentBase
 from traitor.core.data.models import Coin, SummaryTimeframe, TradingStrategy
 from traitor.core.research.market.apis.stealthexchange import StealthexApi
+from traitor.core.services import PriceAnalysisService, PriceFeatureExtractionService
 from traitor.core.tools.ai import LLMAgent
 from traitor.core.tools import time_to_str
 from traitor.core.data.repositories import CoinRepository, NewsAnalysisRepository, PriceAnalysisRepository, \
@@ -22,10 +23,15 @@ class TradingAgent(AgentBase):
     initial_delay = timedelta(minutes=5)
 
     @inject
-    def __init__(self, interval: relativedelta = Provide["config.intervals.TRADING"], model: LLMAgent = Provide["trading_agent"], prompts = Provide["prompts"]):
+    def __init__(self,
+                 interval: relativedelta = Provide["config.intervals.TRADING"],
+                 model: LLMAgent = Provide["trading_agent"],
+                 prompts = Provide["prompts"],
+                 price_feature_intervals = Provide["price_feature_intervals"]):
         self.interval = interval
         self.llm = model
         self.prompts = prompts
+        self.price_feature_intervals = price_feature_intervals
 
         self.coin_repo = CoinRepository()
         self.trading_strategy_repo = TradingStrategyRepository()
@@ -33,6 +39,9 @@ class TradingAgent(AgentBase):
         self.news_repo = NewsAnalysisRepository()
         self.price_analysis_repo = PriceAnalysisRepository()
         self.price_repo = PricesRepository()
+
+        self.price_analysis_service = PriceAnalysisService()
+        self.price_feature_extraction_service = PriceFeatureExtractionService()
 
         self.paper_run = PaperRun()
 
@@ -42,8 +51,11 @@ class TradingAgent(AgentBase):
         logging.info("Evaluating trading opportunities (News + Price)...")
 
         active_coins = self.coin_repo.get_active()
+        # update price information
+        self.price_feature_extraction_service.extract_all(self.price_feature_intervals, active_coins)
+        self.price_analysis_service.analyze_prices(active_coins)
 
-        # 4. Fusion of Intelligence (Decision Making)
+        # Fusion of Intelligence (Decision Making)
         decision = self._make_strategic_decision(active_coins)
 
         logging.info(decision)

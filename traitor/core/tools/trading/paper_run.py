@@ -10,8 +10,6 @@ from traitor.core.tools.trading.wallet import Wallet
 class PaperRun(object):
     def __init__(self):
         self.wallet = Wallet()
-        for cid in self.wallet.portfolio.keys():
-            self.wallet.add(cid, random.random())
 
         self.price_repo = PricesRepository()
         self.trading_log_repo = TradingLogRepository()

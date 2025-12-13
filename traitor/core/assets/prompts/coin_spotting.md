@@ -14,6 +14,7 @@ Your task:
    * Criteria: high relevance, strong sentiment (positive or negative), repeated mentions, or notable regulatory/technology events.
    * Possibly new assets, if they seem promising.
    * Do **not** force recommendations. Only report candidates.
+2. Do NOT produce any output text, just use the tool to propose activation of a new asset.
 
 ---
 ### Unmonitored Assets Worth Reviewing

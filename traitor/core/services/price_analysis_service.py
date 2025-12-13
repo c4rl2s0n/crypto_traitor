@@ -1,15 +1,12 @@
 import logging
 from datetime import timedelta, datetime
 
-from dateutil.relativedelta import relativedelta
 from dependency_injector.wiring import inject, Provide
 
-from traitor.core.agents.agent_base import AgentBase
-from traitor.core.data.models import PriceFeatureInterval, Coin, PriceFeature, PriceAnalysis
-from traitor.core.data.repositories import CoinRepository, PriceFeatureRepository, PriceAnalysisRepository, \
-    PricesRepository
-from traitor.core.tools.ai import LLMAgent
+from traitor.core.data.models import Coin, PriceAnalysis, PriceFeatureInterval, PriceFeature
+from traitor.core.data.repositories import CoinRepository, PricesRepository, PriceAnalysisRepository, PriceFeatureRepository
 from traitor.core.tools import dict_to_json
+from traitor.core.tools.ai import LLMAgent
 
 
 def _features_to_json(features: dict[PriceFeatureInterval, PriceFeature]) -> str:
@@ -36,12 +33,10 @@ def _features_to_json(features: dict[PriceFeatureInterval, PriceFeature]) -> str
     return dict_to_json(json_dict)
 
 
-class PriceAnalysisAgent(AgentBase):
-    name = "Price Analysis"
+class PriceAnalysisService(object):
 
     @inject
-    def __init__(self, interval: relativedelta = Provide["config.intervals.PRICE_ANALYSIS"], model: LLMAgent = Provide["summarize_agent_prices"], prompts = Provide["prompts"]):
-        self.interval = interval
+    def __init__(self, model: LLMAgent = Provide["summarize_agent_prices"], prompts = Provide["prompts"]):
         self.prompts = prompts
         self.model = model
 
@@ -49,13 +44,12 @@ class PriceAnalysisAgent(AgentBase):
         self.price_repo = PricesRepository()
         self.price_analysis_repo = PriceAnalysisRepository()
         self.price_feature_repo = PriceFeatureRepository()
-        logging.info(f"Init Agent {self.name}.")
 
-
-    def _do_task(self):
+    def analyze_prices(self, coins: list[Coin] = None):
         logging.info("Analyzing prices...")
 
-        coins = self.coin_repo.get_active()
+        if coins is None:
+            coins = self.coin_repo.get_active()
         try:
             for coin in coins:
                 coin_features = self.price_feature_repo.get_features(coin.id)

@@ -1,21 +1,16 @@
 import logging
+import random
 import threading
 import time
-from datetime import timedelta
-
-from dateutil.relativedelta import relativedelta
 
 import traitor
 from traitor.core.agents import *
 from traitor.core.agents.agent_base import stop_event
-from traitor.core.agents.coin_spotting_agent import CoinSpottingAgent
-from traitor.core.agents.price_analysis_agent import PriceAnalysisAgent
 from traitor.core.config import container, logs
-from traitor.core.data.models import PriceFeatureInterval
-from traitor.core.data.repositories import PriceFeatureRepository, ArticleRepository, CoinRepository
-from traitor.core.research.news import NewsSummarAIzer
-from traitor.core.services import CoinService, NewsResearchService
+from traitor.core.data.repositories import PriceFeatureRepository, CoinRepository
+from traitor.core.services import CoinService
 from traitor.core.tools.ai import LLMOpenAI
+from traitor.core.tools.trading.wallet import Wallet
 
 
 # TODO: Setup:
@@ -28,9 +23,7 @@ def setup():
     # delete all stored features to enforce re-analysis and avoid usage of outdated features
     price_feature_repo = PriceFeatureRepository()
     price_feature_repo.clear()
-    coin_repo = CoinRepository()
-    coin_repo.clear_balance()
-    # TODO: load real balances on start!
+    _randomize_balance()
 
     # scan for coins
     coin_service = CoinService()
@@ -48,6 +41,13 @@ def setup():
     for coin in coins:
         coin_service.load_price_history(coin)
 
+def _randomize_balance():
+    coin_repo = CoinRepository()
+    coin_repo.clear_balance()
+    # TODO: load real balances on start!
+    wallet = Wallet()
+    for cid in wallet.portfolio.keys():
+        wallet.add(cid, random.random())
 
 def run():
     """
