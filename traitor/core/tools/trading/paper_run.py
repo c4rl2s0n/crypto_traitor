@@ -29,11 +29,11 @@ class PaperRun(object):
             time=datetime.now(),
             coin_out_id=coin_out.id,
             coin_out_name=coin_out.name,
-            balance_out=coin_out.balance,
+            balance_out=balance_out,
             coin_out_value=coin_out_price.value if coin_out_price is not None else None,
             coin_in_id=coin_in.id,
             coin_in_name=coin_in.name,
-            balance_in=coin_in.balance,
+            balance_in=balance_in,
             coin_in_value=coin_in_price.value if coin_in_price is not None else None,
             comment=reason,
         )
