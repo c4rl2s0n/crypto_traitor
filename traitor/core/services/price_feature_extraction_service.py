@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import datetime
 
 import pandas as pd
@@ -69,8 +70,14 @@ class PriceFeatureExtractionService(object):
 
     def extract_all(self, intervals: list[PriceFeatureInterval], coins: list[Coin] = None):
         self.price_feature_repo.clear()
-        for interval in intervals:
-            self.extract_features(interval, coins)
+
+        threads = [
+            threading.Thread(target=self.extract_features, args=(interval, coins),  name=f"PriceFeatureExtraction {interval.name}") for interval in intervals
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
     def extract_features(self, interval: PriceFeatureInterval, coins: list[Coin] = None):
         logging.info(f"Extracting price features (per {interval})...")

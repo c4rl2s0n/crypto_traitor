@@ -20,7 +20,7 @@ from traitor.core.tools.trading.paper_run import PaperRun
 
 class TradingAgent(AgentBase):
     name = "Trading Desk"
-    initial_delay = timedelta(minutes=5)
+    initial_delay = timedelta(minutes=0)
 
     @inject
     def __init__(self,
@@ -51,7 +51,7 @@ class TradingAgent(AgentBase):
         logging.info("Evaluating trading opportunities (News + Price)...")
 
         active_coins = self.coin_repo.get_active()
-        # update price information
+        # update price information (concurrently)
         self.price_feature_extraction_service.extract_all(self.price_feature_intervals, active_coins)
         self.price_analysis_service.analyze_prices(active_coins)
 

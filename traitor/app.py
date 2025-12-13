@@ -23,7 +23,7 @@ def setup():
     # delete all stored features to enforce re-analysis and avoid usage of outdated features
     price_feature_repo = PriceFeatureRepository()
     price_feature_repo.clear()
-    _randomize_balance()
+    # _randomize_balance()
 
     # scan for coins
     coin_service = CoinService()

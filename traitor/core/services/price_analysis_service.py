@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import timedelta, datetime
 
 from dependency_injector.wiring import inject, Provide
@@ -46,27 +47,38 @@ class PriceAnalysisService(object):
         self.price_feature_repo = PriceFeatureRepository()
 
     def analyze_prices(self, coins: list[Coin] = None):
-        logging.info("Analyzing prices...")
+        logging.info("Analyzing coin prices...")
 
         if coins is None:
             coins = self.coin_repo.get_active()
+
+        threads = [
+            threading.Thread(target=self.analyze_coin_prices, args=(coin,),  name=f"PriceFeatureExtraction {coin.name}") for coin in coins
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+    def analyze_coin_prices(self, coin: Coin):
+        logging.info(f"Analyzing prices for coin: {coin.name}...")
+
         try:
-            for coin in coins:
-                coin_features = self.price_feature_repo.get_features(coin.id)
-                if len(coin_features) == 0:
-                    logging.debug(f"No features available for coin {coin.name}. Skipping analysis.")
-                    continue
-                prompt = self._prepare_prompt(coin, coin_features)
-                response = self.model.process_text(
-                    [prompt],
-                    usage_comment="Price Analysis",
-                )
-                analysis = PriceAnalysis(
-                    coin_id=coin.id,
-                    time=datetime.now(),
-                    analysis=response,
-                )
-                self.price_analysis_repo.update(analysis)
+            coin_features = self.price_feature_repo.get_features(coin.id)
+            if len(coin_features) == 0:
+                logging.debug(f"No features available for coin {coin.name}. Abort analysis.")
+                return
+            prompt = self._prepare_prompt(coin, coin_features)
+            response = self.model.process_text(
+                [prompt],
+                usage_comment="Price Analysis",
+            )
+            analysis = PriceAnalysis(
+                coin_id=coin.id,
+                time=datetime.now(),
+                analysis=response,
+            )
+            self.price_analysis_repo.update(analysis)
         except Exception as e:
             logging.exception("Error analyzing prices")
 
