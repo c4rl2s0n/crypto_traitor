@@ -27,6 +27,7 @@ def setup():
 
     # scan for coins
     coin_service = CoinService()
+    coin_repository = CoinRepository()
 
     # populate database with available coins
     if not coin_service.coins_loaded():
@@ -36,6 +37,9 @@ def setup():
     for c in coins:
         if not c.active:
             coin_service.activate_coin(c)
+        if not c.can_trade:
+            c.can_trade = True
+            coin_repository.update(c)
 
     coins = coin_service.get_active_coins()
     for coin in coins:
