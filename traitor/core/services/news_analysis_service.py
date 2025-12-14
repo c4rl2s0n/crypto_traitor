@@ -58,12 +58,10 @@ class NewsAnalysisService:
             logging.error(f"Prompt file not found: {self.prompts.summarize_news_summaries}")
             return
 
-        prompt = template.format(
-            coin_name=coin.name,
-            timeframe=timeframe,
-            score=f"{avg_sentiment:.2f}", 
-            data_text="\n".join(relevant_data)
-        )
+        prompt = template.replace("{coin_name}", coin.name) \
+                         .replace("{timeframe}", timeframe) \
+                         .replace("{score}", f"{avg_sentiment:.2f}") \
+                         .replace("{data_text}", "\n".join(relevant_data))
         
         response_text = self.llm.process_text([prompt])
         clean_json_text = response_text.replace("```json", "").replace("```", "").strip()

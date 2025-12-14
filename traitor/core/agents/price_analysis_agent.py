@@ -98,4 +98,4 @@ class PriceAnalysisAgent(AgentBase):
             f"--- Computed Features ---\n{features_json_str}\n\n"
             f"--- {prices_str}"
         )
-        return template.format(price_features_json=full_data_block)
+        return template.replace("{price_features_json}", full_data_block)

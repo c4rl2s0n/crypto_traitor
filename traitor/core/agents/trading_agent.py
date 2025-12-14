@@ -68,12 +68,10 @@ class TradingAgent(AgentBase):
             return ""
 
         # 2. Fill the template
-        prompt = template.format(
-            coin_analysis="\n---\n".join(coin_analysis),
-            date=datetime.now().strftime("%Y-%m-%d %H:%M"),
-            trading_strategy=self._get_strategy(),
-            trading_history=self._get_trading_history(5)
-        )
+        prompt = template.replace("{coin_analysis}", "\n---\n".join(coin_analysis)) \
+                         .replace("{date}", datetime.now().strftime("%Y-%m-%d %H:%M")) \
+                         .replace("{trading_strategy}", self._get_strategy()) \
+                         .replace("{trading_history}", self._get_trading_history(5))
         logging.debug(f"Final Prompt:\n{prompt}")
 
         # 3. Query the LLM
@@ -132,18 +130,14 @@ class TradingAgent(AgentBase):
 
         current_balance = self.paper_run.wallet.portfolio.get(coin.id, 0.0)
 
-        prompt = template.format(
-            coin_name=coin.name,
-            coin_symbol=coin.symbol,
-            coin_price=latest_price.value if latest_price else "Unknown",
-            coin_balance=current_balance,
-            
-            sentiment_score=news_summary.sentiment_score,
-            technical_score=tech_score, 
-            news_summary=news_summary.content,
-            # Assume price_data.analysis is the text/json of the technical analysis
-            price_analysis=price_analysis.analysis
-        )
+        prompt = template.replace("{coin_name}", coin.name) \
+                         .replace("{coin_symbol}", coin.symbol) \
+                         .replace("{coin_price}", str(latest_price.value) if latest_price else "Unknown") \
+                         .replace("{coin_balance}", str(current_balance)) \
+                         .replace("{sentiment_score}", str(news_summary.sentiment_score)) \
+                         .replace("{technical_score}", str(tech_score)) \
+                         .replace("{news_summary}", news_summary.content) \
+                         .replace("{price_analysis}", price_analysis.analysis)
         return prompt
 
     def _get_strategy(self) -> str:

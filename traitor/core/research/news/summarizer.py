@@ -14,13 +14,6 @@ class NewsSummarAIzer(object):
         self.prompts = prompts
 
     def summarize_article(self, article: Article) -> str:
-        return self.model.process_text([
-            open(self.prompts.summarize_news, "r").read(),
-            f"Current Date: {datetime.date.today()}",
-            str(article)
-        ])
-
-    def summarize_article(self, article: Article) -> str:
         try:
             with open(self.prompts.summarize_news, "r") as f:
                 template = f.read()
@@ -32,8 +25,8 @@ class NewsSummarAIzer(object):
             f"Title: {article.title}\n"
             f"Body:\n{article.content}"
         )
-        
-        final_prompt = template.format(content=article_text)
+
+        final_prompt = template.replace("{content}", article_text)
 
         return self.model.process_text([final_prompt])
 
